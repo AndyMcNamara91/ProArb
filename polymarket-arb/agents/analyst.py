@@ -55,6 +55,20 @@ class AnalystAgent:
         None if skipped (reason logged to state).
         """
 
+        # ── 0. Skip longshots and extreme mispricings ──────────────────────
+        MIN_WIN_PROB = 0.40
+        MIN_POLY_PRICE = 0.20
+        if opp.our_prob < MIN_WIN_PROB:
+            self.state.skip_trade(
+                f"{opp.event_name}: win prob {opp.our_prob*100:.0f}% < {MIN_WIN_PROB*100:.0f}% floor"
+            )
+            return None
+        if opp.poly_price < MIN_POLY_PRICE:
+            self.state.skip_trade(
+                f"{opp.event_name}: poly price {opp.poly_price:.2f} < {MIN_POLY_PRICE} floor (too risky)"
+            )
+            return None
+
         # ── 1. Staleness check ──────────────────────────────────────────────
         age = time.time() - opp.timestamp
         if age > MAX_OPP_AGE_SEC:
