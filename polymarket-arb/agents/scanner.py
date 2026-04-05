@@ -37,21 +37,34 @@ POLY_GAMMA_BASE = "https://gamma-api.polymarket.com"
 ODDS_API_BASE   = "https://api.the-odds-api.com/v4"
 ESPN_BASE       = "https://site.api.espn.com/apis/site/v2/sports"
 
-# Sports to monitor — The Odds API sport keys
-SPORTS = [
+# Sports to monitor via The Odds API (costs credits — keep selective)
+ODDS_API_SPORTS = [
     "basketball_nba",
     "americanfootball_nfl",
     "basketball_ncaab",
     "baseball_mlb",
+    "icehockey_nhl",
+    "soccer_epl",
 ]
 
-# ESPN endpoint mapping
+# ESPN endpoint mapping (FREE — no API key needed, can be expansive)
 ESPN_ENDPOINTS = {
     "basketball_nba":      "basketball/nba",
     "americanfootball_nfl": "football/nfl",
     "basketball_ncaab":    "basketball/mens-college-basketball",
     "baseball_mlb":        "baseball/mlb",
+    "icehockey_nhl":       "hockey/nhl",
+    "soccer_epl":          "soccer/eng.1",
+    "soccer_usa_mls":      "soccer/usa.1",
+    "soccer_spain_la_liga": "soccer/esp.1",
+    "soccer_germany_bundesliga": "soccer/ger.1",
+    "soccer_italy_serie_a": "soccer/ita.1",
+    "soccer_france_ligue_one": "soccer/fra.1",
+    "soccer_uefa_champs_league": "soccer/uefa.champions",
 }
+
+# All sports to scan ESPN for (superset — free)
+ESPN_SPORTS = list(ESPN_ENDPOINTS.keys())
 
 # Minimum raw edge to bother queuing (analyst applies stricter gate)
 RAW_EDGE_THRESHOLD = 0.06  # 6%
@@ -112,8 +125,8 @@ class ScannerAgent:
             log.warning("No Polymarket sports markets found — nothing to scan")
             return
 
-        # Fetch ESPN scores for all sports
-        for sport in SPORTS:
+        # Fetch ESPN scores for all sports (free — no credit cost)
+        for sport in ESPN_SPORTS:
             try:
                 await self._refresh_espn_scores(sport)
             except Exception as e:
@@ -149,9 +162,14 @@ class ScannerAgent:
         sports_keywords = [
             "win", "nba", "nfl", "mlb", "nhl", "ncaa", "premier league",
             "champions league", "la liga", "serie a", "bundesliga",
+            "ligue 1", "mls", "liga mx", "eredivisie",
             "cricket", "ipl", "tennis", "ufc", "boxing", "soccer",
-            "football", "basketball", "baseball", "finals", "world cup",
+            "football", "basketball", "baseball", "hockey", "ice hockey",
+            "finals", "world cup", "europa league",
             "vs", "match", "game",
+            # Team names that help catch sports markets
+            "united", "city", "real madrid", "barcelona", "arsenal",
+            "liverpool", "chelsea", "tottenham", "manchester",
         ]
         political_keywords = [
             "president", "election", "nominee", "nomination", "congress",
@@ -329,6 +347,18 @@ class ScannerAgent:
             # Baseball: 9 innings, use period/9
             return max(0.0, min(1.0, 1.0 - period / 9.0))
 
+        elif "hockey" in sport or "icehockey" in sport:
+            # NHL: 3 x 20min periods
+            total_seconds = 3 * 20 * 60
+            elapsed = (period - 1) * 20 * 60 + (20 * 60 - clock_seconds)
+            return max(0.0, min(1.0, 1.0 - elapsed / total_seconds))
+
+        elif "soccer" in sport:
+            # Soccer: 2 x 45min halves + stoppage time
+            total_seconds = 90 * 60
+            elapsed = (period - 1) * 45 * 60 + (45 * 60 - clock_seconds)
+            return max(0.0, min(1.0, 1.0 - elapsed / total_seconds))
+
         return 0.5  # fallback
 
     # ── Scan mode: ESPN scores + Polymarket ──────────────────────────────────
@@ -414,6 +444,10 @@ class ScannerAgent:
             sport_type = "football"
         elif "baseball" in matched_sport:
             sport_type = "baseball"
+        elif "hockey" in matched_sport or "icehockey" in matched_sport:
+            sport_type = "hockey"
+        elif "soccer" in matched_sport:
+            sport_type = "soccer"
 
         # Determine which team the Polymarket YES corresponds to
         # "Will X win..." -> YES = X wins
@@ -483,7 +517,7 @@ class ScannerAgent:
             all_events = self._odds_api_cache
         else:
             all_events = []
-            for sport in SPORTS:
+            for sport in ODDS_API_SPORTS:
                 events = await self._async_get(
                     f"{ODDS_API_BASE}/sports/{sport}/odds",
                     params={
@@ -499,7 +533,7 @@ class ScannerAgent:
                     all_events.extend(events)
             self._odds_api_cache = all_events
             self._last_odds_api_refresh = time.time()
-            log.info(f"Odds API: fetched {len(all_events)} events across {len(SPORTS)} sports")
+            log.info(f"Odds API: fetched {len(all_events)} events across {len(ODDS_API_SPORTS)} sports")
 
         for event in all_events:
             try:

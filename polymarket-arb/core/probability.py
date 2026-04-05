@@ -68,6 +68,7 @@ def in_game_win_prob(
         "football":   0.25,   # 3-score game = very safe late
         "baseball":   0.20,
         "soccer":     0.30,   # low-scoring, even 1-goal leads can flip
+        "hockey":     0.25,   # low-scoring like soccer, goals are hard to come by
     }.get(sport.lower(), 0.20)
 
     # Logistic: larger lead + less time = higher probability
