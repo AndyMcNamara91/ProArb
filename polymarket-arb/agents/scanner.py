@@ -512,7 +512,7 @@ class ScannerAgent:
     async def _scan_with_odds_api(self, queue: asyncio.Queue) -> None:
         """Full mode: compare bookmaker odds to Polymarket prices. Rate limited to 1 req/min."""
         # Rate limit: only call Odds API once per 120 seconds
-        if time.time() - self._last_odds_api_refresh < 120:
+        if time.time() - self._last_odds_api_refresh < 900:
             # Use cached results
             all_events = self._odds_api_cache
         else:
