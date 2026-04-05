@@ -15,7 +15,7 @@ Set DEMO_MODE=false and provide real credentials to go live.
 import asyncio
 import logging
 import os
-import random
+import re
 import time
 from pathlib import Path
 
@@ -55,6 +55,12 @@ class ExecutorAgent:
 
         opp = decision.opportunity
 
+        # ── Dedup: skip if we already have a pending bet on this market ──────
+        for existing in self.state._open_trades.values():
+            if existing.market_id == opp.market_id and existing.status == "pending_outcome":
+                log.debug(f"Already have pending bet on {opp.event_name} — skipping")
+                return
+
         # ── Re-validate age ──────────────────────────────────────────────────
         latency = time.time() - decision.decision_ts
         if latency > 8.0:
@@ -65,11 +71,13 @@ class ExecutorAgent:
         # ── Demo mode ────────────────────────────────────────────────────────
         if DEMO_MODE:
             log.info(
-                f"[DEMO] WOULD PLACE: {opp.event_name} | {opp.our_side} "
+                f"[DEMO] PLACED: {opp.event_name} | {opp.our_side} "
                 f"@ {opp.poly_price:.4f} | size ${decision.stake_usdc:.2f} "
                 f"| edge {opp.raw_edge*100:.1f}% | EV ${decision.expected_val:.2f}"
             )
-            # Simulate a fill for state tracking
+            # Record trade — will be resolved by outcome_checker when game finishes
+            # Parse team info from source_detail (e.g. "ESPN live | Boston Celtics 24-Toronto Raptors 20")
+            home_team, away_team, bet_team = self._parse_teams(opp)
             trade = Trade(
                 timestamp     = time.time(),
                 market_id     = opp.market_id,
@@ -81,12 +89,14 @@ class ExecutorAgent:
                 edge_at_entry = opp.raw_edge,
                 sports_prob   = opp.our_prob,
                 poly_prob     = opp.poly_price,
-                status        = "demo_filled",
-                order_id      = f"demo-{int(time.time())}",
+                status        = "pending_outcome",
+                order_id      = f"demo-{int(time.time() * 1000)}",
+                home_team     = home_team,
+                away_team     = away_team,
+                sport         = opp.sport,
+                bet_team      = bet_team,
             )
             self.state.record_trade(trade)
-            # Auto-close demo trade after a short delay so positions cycle
-            asyncio.create_task(self._demo_auto_close(trade))
             return
 
         # ── Live execution ───────────────────────────────────────────────────
@@ -160,19 +170,49 @@ class ExecutorAgent:
         else:
             raise RuntimeError(f"Unexpected order response: {resp}")
 
-    async def _demo_auto_close(self, trade: Trade) -> None:
-        """Simulate closing a demo trade after 5-15s with random P&L."""
-        delay = random.uniform(5, 15)
-        await asyncio.sleep(delay)
-        # Simulate price movement: win ~60% of the time in demo
-        if random.random() < 0.6:
-            pnl = round(random.uniform(0.50, trade.size_usdc * 0.3), 2)
+    def _parse_teams(self, opp) -> tuple:
+        """Extract home_team, away_team, and which team we're betting on from opportunity."""
+        source = opp.source_detail
+        home_team = away_team = bet_team = ""
+
+        # Source detail format: "ESPN live | Home Team 24-Away Team 20"
+        # or from Odds API: "{N} bookmakers, {sport}"
+        if "ESPN live" in source:
+            try:
+                parts = source.split(" | ", 1)[1] if " | " in source else source
+                # "Boston Celtics 24-Toronto Raptors 20" or "Boston Celtics 24-20 Toronto Raptors"
+                # Try splitting on score pattern
+                import re
+                m = re.match(r"(.+?)\s+\d+[-–]\d+\s+(.+)", parts)
+                if m:
+                    home_team = m.group(1).strip()
+                    away_team = m.group(2).strip()
+            except Exception:
+                pass
+
+        # From event name: "Team A @ Team B" (Odds API) or "Team A vs. Team B" (Polymarket)
+        if not home_team:
+            name = opp.event_name
+            if " @ " in name:
+                away_team, home_team = name.split(" @ ", 1)
+            elif " vs. " in name:
+                parts = name.split(" vs. ", 1)
+                home_team = parts[1] if len(parts) > 1 else ""
+                away_team = parts[0]
+            elif " vs " in name:
+                parts = name.split(" vs ", 1)
+                home_team = parts[1] if len(parts) > 1 else ""
+                away_team = parts[0]
+
+        # Determine which team we're betting on
+        # YES on "Team A vs Team B" = Team A (first team / away in @ format)
+        # For Polymarket "X vs Y" markets, YES typically = first team listed
+        if opp.our_side == "YES":
+            bet_team = away_team if " @ " in opp.event_name else home_team or away_team
         else:
-            pnl = round(-random.uniform(0.50, trade.size_usdc * 0.2), 2)
-        fill_price = round(trade.entry_price + random.uniform(-0.05, 0.05), 4)
-        fill_price = max(0.01, min(0.99, fill_price))
-        self.state.close_trade(trade.order_id, fill_price, pnl)
-        log.info(f"[DEMO] Auto-closed {trade.event_name} | P&L ${pnl:+.2f}")
+            bet_team = home_team if " @ " in opp.event_name else away_team or home_team
+
+        return home_team.strip(), away_team.strip(), bet_team.strip()
 
     def _get_client(self):
         """Lazy-init the py-clob-client. Raises on missing credentials."""

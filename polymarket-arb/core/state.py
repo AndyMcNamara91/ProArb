@@ -26,10 +26,14 @@ class Trade:
     edge_at_entry: float        # e.g. 0.14 = 14%
     sports_prob:   float        # our estimated true probability
     poly_prob:     float        # polymarket price at entry
-    status:        str = "open" # open | filled | demo_filled | failed
+    status:        str = "open" # open | filled | demo_filled | pending_outcome
     fill_price:    Optional[float] = None
     pnl:           Optional[float] = None
     order_id:      Optional[str]   = None
+    home_team:     Optional[str]   = None   # for outcome resolution
+    away_team:     Optional[str]   = None
+    sport:         Optional[str]   = None
+    bet_team:      Optional[str]   = None   # which team we're betting wins
 
 
 class BotState:

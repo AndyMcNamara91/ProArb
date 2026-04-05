@@ -32,6 +32,7 @@ load_dotenv()
 from agents.scanner import ScannerAgent
 from agents.analyst import AnalystAgent
 from agents.executor import ExecutorAgent
+from agents.outcome_checker import OutcomeChecker
 from core.state import BotState
 from core.risk import RiskManager
 
@@ -73,9 +74,10 @@ async def main():
         max_position_pct=float(os.getenv("MAX_POSITION_PCT", 0.05)),
     )
 
-    scanner = ScannerAgent(state)
-    analyst = AnalystAgent(state, risk)
+    scanner  = ScannerAgent(state)
+    analyst  = AnalystAgent(state, risk)
     executor = ExecutorAgent(state, risk)
+    outcome_checker = OutcomeChecker(state)
 
     # Bounded queues prevent unbounded memory growth
     opportunity_queue: asyncio.Queue = asyncio.Queue(maxsize=100)
@@ -119,6 +121,16 @@ async def main():
             except Exception as e:
                 log.error(f"Executor error: {e}")
         log.warning("Executor halting")
+
+    async def run_outcome_checker():
+        """Poll ESPN for finished games and resolve pending trades with real P&L."""
+        while not KILL_FILE.exists() and not shutdown_event.is_set():
+            try:
+                await outcome_checker.check_outcomes()
+            except Exception as e:
+                log.error(f"Outcome checker error: {e}")
+            await asyncio.sleep(30)
+        log.warning("Outcome checker halting")
 
     async def run_risk_monitor():
         """Watch for daily loss limit breach and trigger kill switch."""
@@ -175,6 +187,7 @@ async def main():
             run_scanner(),
             run_analyst(),
             run_executor(),
+            run_outcome_checker(),
             run_risk_monitor(),
             run_dashboard(uv_server_holder),
             run_stop_watcher(uv_server_holder),
