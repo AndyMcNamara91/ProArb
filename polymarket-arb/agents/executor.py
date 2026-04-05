@@ -200,48 +200,28 @@ class ExecutorAgent:
             raise RuntimeError(f"Unexpected order response: {resp}")
 
     def _parse_teams(self, opp) -> tuple:
-        """Extract home_team, away_team, and which team we're betting on from opportunity."""
-        source = opp.source_detail
-        home_team = away_team = bet_team = ""
+        """Extract first_team, second_team, and bet_team from event name.
 
-        # Source detail format: "ESPN live | Home Team 24-Away Team 20"
-        # or from Odds API: "{N} bookmakers, {sport}"
-        if "ESPN live" in source:
-            try:
-                parts = source.split(" | ", 1)[1] if " | " in source else source
-                # "Boston Celtics 24-Toronto Raptors 20" or "Boston Celtics 24-20 Toronto Raptors"
-                # Try splitting on score pattern
-                import re
-                m = re.match(r"(.+?)\s+\d+[-–]\d+\s+(.+)", parts)
-                if m:
-                    home_team = m.group(1).strip()
-                    away_team = m.group(2).strip()
-            except Exception:
-                pass
+        Polymarket: "Team A vs. Team B" -> YES = Team A wins
+        Odds API:   "Team A @ Team B"   -> YES = Team A wins
+        """
+        name = opp.event_name
+        first_team = second_team = ""
 
-        # From event name: "Team A @ Team B" (Odds API) or "Team A vs. Team B" (Polymarket)
-        if not home_team:
-            name = opp.event_name
-            if " @ " in name:
-                away_team, home_team = name.split(" @ ", 1)
-            elif " vs. " in name:
-                parts = name.split(" vs. ", 1)
-                home_team = parts[1] if len(parts) > 1 else ""
-                away_team = parts[0]
-            elif " vs " in name:
-                parts = name.split(" vs ", 1)
-                home_team = parts[1] if len(parts) > 1 else ""
-                away_team = parts[0]
+        if " @ " in name:
+            first_team, second_team = name.split(" @ ", 1)
+        elif " vs. " in name:
+            first_team, second_team = name.split(" vs. ", 1)
+        elif " vs " in name:
+            first_team, second_team = name.split(" vs ", 1)
 
-        # Determine which team we're betting on
-        # YES on "Team A vs Team B" = Team A (first team / away in @ format)
-        # For Polymarket "X vs Y" markets, YES typically = first team listed
-        if opp.our_side == "YES":
-            bet_team = away_team if " @ " in opp.event_name else home_team or away_team
-        else:
-            bet_team = home_team if " @ " in opp.event_name else away_team or home_team
+        first_team = first_team.strip()
+        second_team = second_team.strip()
 
-        return home_team.strip(), away_team.strip(), bet_team.strip()
+        # YES = first team wins, NO = second team wins
+        bet_team = first_team if opp.our_side == "YES" else second_team
+
+        return first_team, second_team, bet_team
 
     def _get_client(self):
         """Lazy-init the py-clob-client. Raises on missing credentials."""

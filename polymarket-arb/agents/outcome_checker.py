@@ -166,15 +166,26 @@ class OutcomeChecker:
                 g = self._finished_games[key]
                 return g["winner"], g
 
-        # Fuzzy match: use team nicknames from event name
+        # Fuzzy match: use team nicknames from event name (whole word only)
+        import re
         event_lower = trade.event_name.lower()
+        # Split event into words for whole-word matching
+        event_words = set(re.split(r'[\s.@]+', event_lower))
+
         for key, game in self._finished_games.items():
             home_nick = game["home_team"].split()[-1].lower()
             away_nick = game["away_team"].split()[-1].lower()
 
-            if len(home_nick) > 3 and home_nick in event_lower:
+            # Require BOTH team nicknames to match (prevents "nets" matching "hornets")
+            home_match = len(home_nick) > 3 and home_nick in event_words
+            away_match = len(away_nick) > 3 and away_nick in event_words
+
+            if home_match and away_match:
                 return game["winner"], game
-            if len(away_nick) > 3 and away_nick in event_lower:
+            # Single match only if the nickname is long enough to be unambiguous (>6 chars)
+            if home_match and len(home_nick) > 6:
+                return game["winner"], game
+            if away_match and len(away_nick) > 6:
                 return game["winner"], game
 
         return None
