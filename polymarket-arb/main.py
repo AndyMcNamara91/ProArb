@@ -26,13 +26,14 @@ from pathlib import Path
 import colorlog
 from dotenv import load_dotenv
 
+# Load .env BEFORE importing agents — they read env vars at module level
+load_dotenv()
+
 from agents.scanner import ScannerAgent
 from agents.analyst import AnalystAgent
 from agents.executor import ExecutorAgent
 from core.state import BotState
 from core.risk import RiskManager
-
-load_dotenv()
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 handler = colorlog.StreamHandler()
