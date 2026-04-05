@@ -4,3 +4,4 @@ STOP
 __pycache__/
 *.pyc
 bot.log
+watchdog.log
