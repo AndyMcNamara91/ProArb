@@ -117,12 +117,15 @@ class ScannerAgent:
             except Exception as e:
                 log.debug(f"ESPN refresh failed for {sport}: {e}")
 
+        # Always run ESPN scan (free, no key needed)
+        await self._scan_with_espn(queue)
+
+        # Also run Odds API if key is available (enriches with bookmaker consensus)
         if ODDS_API_KEY:
-            # Full mode: compare bookmaker odds to Polymarket prices
-            await self._scan_with_odds_api(queue)
-        else:
-            # No odds API key: use ESPN scores + Polymarket prices
-            await self._scan_with_espn(queue)
+            try:
+                await self._scan_with_odds_api(queue)
+            except Exception as e:
+                log.debug(f"Odds API scan failed (falling back to ESPN only): {e}")
 
     # ── Polymarket market list (real API) ────────────────────────────────────
 
