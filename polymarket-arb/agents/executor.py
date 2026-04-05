@@ -42,6 +42,7 @@ class ExecutorAgent:
         self.state  = state
         self.risk   = risk
         self._client = None  # lazy-init so import errors don't crash at startup
+        self._placed_nicknames: set = set()  # tracks team nicknames already bet on
 
     async def execute(self, decision: TradeDecision) -> None:
         """
@@ -55,11 +56,37 @@ class ExecutorAgent:
 
         opp = decision.opportunity
 
-        # ── Dedup: skip if we already have a pending bet on this market ──────
-        for existing in self.state._open_trades.values():
-            if existing.market_id == opp.market_id and existing.status == "pending_outcome":
-                log.debug(f"Already have pending bet on {opp.event_name} — skipping")
+        # ── Dedup: skip if we already have a pending bet on this game ─────────
+        # Extract team nicknames (last word of each team) from event name
+        event_nicks = set()
+        name = opp.event_name
+        for sep in [" @ ", " vs. ", " vs "]:
+            if sep in name:
+                parts = name.split(sep, 1)
+                for p in parts:
+                    nick = p.strip().split()[-1].lower() if p.strip() else ""
+                    if len(nick) > 3:
+                        event_nicks.add(nick)
+                break
+
+        # Check against in-memory nickname set (catches same-cycle dupes)
+        for nick in event_nicks:
+            if nick in self._placed_nicknames:
+                log.debug(f"Already placed bet involving {nick} — skipping {opp.event_name}")
                 return
+
+        # Check against open trades in state
+        for existing in self.state._open_trades.values():
+            if existing.status != "pending_outcome":
+                continue
+            if existing.market_id == opp.market_id:
+                log.debug(f"Already have pending bet on {opp.event_name} (market_id) — skipping")
+                return
+            existing_lower = existing.event_name.lower()
+            for nick in event_nicks:
+                if nick in existing_lower:
+                    log.debug(f"Already have pending bet on {opp.event_name} (team: {nick}) — skipping")
+                    return
 
         # ── Re-validate age ──────────────────────────────────────────────────
         latency = time.time() - decision.decision_ts
@@ -97,6 +124,8 @@ class ExecutorAgent:
                 bet_team      = bet_team,
             )
             self.state.record_trade(trade)
+            # Track nicknames so same-cycle dupes are caught
+            self._placed_nicknames.update(event_nicks)
             return
 
         # ── Live execution ───────────────────────────────────────────────────
