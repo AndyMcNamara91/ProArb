@@ -83,6 +83,8 @@ class ScannerAgent:
         self._espn_cache: dict = {}          # sport -> {team_name -> game_state}
         self._last_espn_refresh: dict = {}   # sport -> timestamp
         self._recent_trades: dict = {}       # market_id -> last trade timestamp (dedup)
+        self._last_odds_api_refresh = 0.0    # rate limit Odds API to once per 60s
+        self._odds_api_cache: list = []      # cached Odds API results
 
     async def _async_get(self, url: str, params: dict = None) -> Optional[dict]:
         """Run requests.get in executor to avoid blocking the event loop."""
@@ -474,37 +476,49 @@ class ScannerAgent:
     # ── Scan mode: The Odds API + Polymarket ─────────────────────────────────
 
     async def _scan_with_odds_api(self, queue: asyncio.Queue) -> None:
-        """Full mode: compare bookmaker odds to Polymarket prices."""
-        for sport in SPORTS:
-            events = await self._async_get(
-                f"{ODDS_API_BASE}/sports/{sport}/odds",
-                params={
-                    "apiKey": ODDS_API_KEY,
-                    "regions": "us",
-                    "markets": "h2h",
-                    "oddsFormat": "american",
-                },
-            )
-            if not events:
-                continue
+        """Full mode: compare bookmaker odds to Polymarket prices. Rate limited to 1 req/min."""
+        # Rate limit: only call Odds API once per 60 seconds
+        if time.time() - self._last_odds_api_refresh < 60:
+            # Use cached results
+            all_events = self._odds_api_cache
+        else:
+            all_events = []
+            for sport in SPORTS:
+                events = await self._async_get(
+                    f"{ODDS_API_BASE}/sports/{sport}/odds",
+                    params={
+                        "apiKey": ODDS_API_KEY,
+                        "regions": "us",
+                        "markets": "h2h",
+                        "oddsFormat": "american",
+                    },
+                )
+                if events:
+                    for e in events:
+                        e["_sport"] = sport
+                    all_events.extend(events)
+            self._odds_api_cache = all_events
+            self._last_odds_api_refresh = time.time()
+            log.info(f"Odds API: fetched {len(all_events)} events across {len(SPORTS)} sports")
 
-            for event in events:
-                try:
-                    opp = self._process_odds_event(event, sport)
-                    if opp and opp.raw_edge >= RAW_EDGE_THRESHOLD:
-                        log.info(
-                            f"EDGE FOUND  {opp.event_name} | "
-                            f"{opp.our_side} edge={opp.raw_edge*100:.1f}% "
-                            f"(us:{opp.our_prob:.3f} poly:{opp.poly_price:.3f}) "
-                            f"[{opp.data_sources} bookmakers]"
-                        )
-                        await queue.put(opp)
-                    elif opp:
-                        self.state.skip_trade(
-                            f"{opp.event_name}: edge {opp.raw_edge*100:.1f}% < threshold"
-                        )
-                except Exception as e:
-                    log.debug(f"Process event error: {e}")
+        for event in all_events:
+            try:
+                sport = event.get("_sport", "")
+                opp = self._process_odds_event(event, sport)
+                if opp and opp.raw_edge >= RAW_EDGE_THRESHOLD:
+                    log.info(
+                        f"EDGE FOUND  {opp.event_name} | "
+                        f"{opp.our_side} edge={opp.raw_edge*100:.1f}% "
+                        f"(us:{opp.our_prob:.3f} poly:{opp.poly_price:.3f}) "
+                        f"[{opp.data_sources} bookmakers]"
+                    )
+                    await queue.put(opp)
+                elif opp:
+                    self.state.skip_trade(
+                        f"{opp.event_name}: edge {opp.raw_edge*100:.1f}% < threshold"
+                    )
+            except Exception as e:
+                log.debug(f"Process event error: {e}")
 
     def _process_odds_event(self, event: dict, sport: str) -> Optional[Opportunity]:
         """Match an Odds API event to a Polymarket market and compute edge."""
