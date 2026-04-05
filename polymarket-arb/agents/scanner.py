@@ -448,7 +448,7 @@ class ScannerAgent:
                 market_id=market["id"], token_id=market["token_id_yes"],
                 our_side="YES", our_prob=our_prob, poly_price=poly_yes,
                 raw_edge=max(edge_yes, edge_no), score_diff=score_diff,
-                time_remaining_pct=time_pct, data_sources=1,
+                time_remaining_pct=time_pct, data_sources=2,
                 source_detail=f"ESPN live score | {game_state['home_team']} {game_state['home_score']}-{game_state['away_score']} {game_state['away_team']}",
             )
 
@@ -464,7 +464,7 @@ class ScannerAgent:
             raw_edge=round(edge, 4),
             score_diff=score_diff,
             time_remaining_pct=time_pct,
-            data_sources=1,
+            data_sources=2,  # ESPN live score = authoritative source (count as 2)
             source_detail=f"ESPN live | {game_state['home_team']} {game_state['home_score']}-{game_state['away_score']} {game_state['away_team']}",
         )
 

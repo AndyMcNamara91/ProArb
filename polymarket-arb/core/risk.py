@@ -25,7 +25,7 @@ class RiskManager:
         self.daily_loss_limit  = daily_loss_limit
         self.max_position_pct  = max_position_pct
         self.min_edge          = float(os.getenv("MIN_EDGE", 0.08))
-        self.min_confidence    = float(os.getenv("MIN_CONFIDENCE", 0.70))
+        self.min_confidence    = float(os.getenv("MIN_CONFIDENCE", 0.30))
         self.kelly_fraction    = float(os.getenv("KELLY_FRACTION", 0.25))
         self.max_open          = int(os.getenv("MAX_OPEN_POSITIONS", 3))
         self._daily_loss_total = 0.0
