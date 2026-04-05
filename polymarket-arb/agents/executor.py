@@ -15,6 +15,7 @@ Set DEMO_MODE=false and provide real credentials to go live.
 import asyncio
 import logging
 import os
+import random
 import time
 from pathlib import Path
 
@@ -84,6 +85,8 @@ class ExecutorAgent:
                 order_id      = f"demo-{int(time.time())}",
             )
             self.state.record_trade(trade)
+            # Auto-close demo trade after a short delay so positions cycle
+            asyncio.create_task(self._demo_auto_close(trade))
             return
 
         # ── Live execution ───────────────────────────────────────────────────
@@ -156,6 +159,20 @@ class ExecutorAgent:
             return order_id
         else:
             raise RuntimeError(f"Unexpected order response: {resp}")
+
+    async def _demo_auto_close(self, trade: Trade) -> None:
+        """Simulate closing a demo trade after 5-15s with random P&L."""
+        delay = random.uniform(5, 15)
+        await asyncio.sleep(delay)
+        # Simulate price movement: win ~60% of the time in demo
+        if random.random() < 0.6:
+            pnl = round(random.uniform(0.50, trade.size_usdc * 0.3), 2)
+        else:
+            pnl = round(-random.uniform(0.50, trade.size_usdc * 0.2), 2)
+        fill_price = round(trade.entry_price + random.uniform(-0.05, 0.05), 4)
+        fill_price = max(0.01, min(0.99, fill_price))
+        self.state.close_trade(trade.order_id, fill_price, pnl)
+        log.info(f"[DEMO] Auto-closed {trade.event_name} | P&L ${pnl:+.2f}")
 
     def _get_client(self):
         """Lazy-init the py-clob-client. Raises on missing credentials."""
