@@ -123,3 +123,35 @@ def expected_value(our_prob: float, poly_price: float, stake: float) -> float:
     profit_if_right = (1.0 - poly_price) / poly_price * stake
     ev = our_prob * profit_if_right - (1.0 - our_prob) * stake
     return ev
+
+
+# ── Inline tests ────────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    # american_to_prob
+    assert abs(american_to_prob(150) - 0.400) < 0.001, f"Expected ~0.400, got {american_to_prob(150)}"
+    assert abs(american_to_prob(-200) - 0.667) < 0.001, f"Expected ~0.667, got {american_to_prob(-200)}"
+
+    # decimal_to_prob
+    assert abs(decimal_to_prob(2.50) - 0.400) < 0.001
+
+    # remove_vig — output must sum to 1.0
+    h, a = remove_vig(0.55, 0.52)
+    assert abs(h + a - 1.0) < 0.0001, f"remove_vig sum = {h + a}"
+
+    # calculate_edge
+    assert abs(calculate_edge(0.87, 0.55) - 0.32) < 0.001, f"Expected ~0.32, got {calculate_edge(0.87, 0.55)}"
+
+    # confidence_score — late game, big lead, 3 sources → high confidence
+    cs = confidence_score(3, 0.05, 18)
+    assert cs > 0.8, f"Expected > 0.8, got {cs}"
+
+    # expected_value — positive EV for strong edge
+    ev = expected_value(0.87, 0.55, 10.0)
+    assert ev > 0, f"Expected positive EV, got {ev}"
+
+    # in_game_win_prob — leading team late in game
+    wp = in_game_win_prob(15, 0.05, "basketball")
+    assert wp > 0.9, f"Expected > 0.9 for big lead late, got {wp}"
+
+    print("All probability tests passed")

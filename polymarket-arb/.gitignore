@@ -1,0 +1,5 @@
+.env
+trades.jsonl
+STOP
+__pycache__/
+*.pyc

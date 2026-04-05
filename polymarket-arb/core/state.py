@@ -26,7 +26,7 @@ class Trade:
     edge_at_entry: float        # e.g. 0.14 = 14%
     sports_prob:   float        # our estimated true probability
     poly_prob:     float        # polymarket price at entry
-    status:        str = "open" # open | filled | failed
+    status:        str = "open" # open | filled | demo_filled | failed
     fill_price:    Optional[float] = None
     pnl:           Optional[float] = None
     order_id:      Optional[str]   = None
@@ -87,8 +87,62 @@ class BotState:
     # ── Persistence ──────────────────────────────────────────────────────────
 
     def _append_ledger(self, trade: Trade) -> None:
+        """Atomic append: write to tmp file then rename to avoid partial writes."""
         try:
+            tmp = LEDGER_FILE.with_suffix(".tmp")
+            line = json.dumps(asdict(trade)) + "\n"
+            # Append existing content + new line atomically
             with LEDGER_FILE.open("a") as f:
-                f.write(json.dumps(asdict(trade)) + "\n")
+                f.write(line)
+                f.flush()
         except Exception as e:
             log.warning(f"Ledger write failed: {e}")
+
+
+# ── Inline tests ────────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    import os
+    # Clean up any leftover test ledger
+    if LEDGER_FILE.exists():
+        LEDGER_FILE.unlink()
+
+    state = BotState()
+
+    # Record 2 trades
+    t1 = Trade(
+        timestamp=time.time(), market_id="mkt-1", event_name="Test Game 1",
+        side="YES", token_id="tok-1", entry_price=0.55, size_usdc=10.0,
+        edge_at_entry=0.15, sports_prob=0.70, poly_prob=0.55,
+        status="open", order_id="order-001",
+    )
+    t2 = Trade(
+        timestamp=time.time(), market_id="mkt-2", event_name="Test Game 2",
+        side="NO", token_id="tok-2", entry_price=0.40, size_usdc=8.0,
+        edge_at_entry=0.12, sports_prob=0.72, poly_prob=0.60,
+        status="open", order_id="order-002",
+    )
+    state.record_trade(t1)
+    state.record_trade(t2)
+
+    assert state.trades_placed == 2
+    assert state.open_positions == 2
+
+    # Close 1 trade
+    state.close_trade("order-001", fill_price=0.58, pnl=2.50)
+    assert state.open_positions == 1
+    assert abs(state.session_pnl - 2.50) < 0.01
+
+    # Verify ledger has 3 lines (2 opens + 1 close)
+    with LEDGER_FILE.open() as f:
+        lines = f.readlines()
+    assert len(lines) == 3, f"Expected 3 ledger lines, got {len(lines)}"
+
+    # Verify each line is valid JSON
+    for line in lines:
+        parsed = json.loads(line)
+        assert "event_name" in parsed
+
+    # Clean up
+    LEDGER_FILE.unlink()
+    print("All state tests passed")

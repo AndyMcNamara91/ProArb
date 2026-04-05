@@ -104,3 +104,43 @@ class RiskManager:
     def reset_daily(self) -> None:
         """Call at midnight to reset daily loss counter."""
         self._daily_loss_total = 0.0
+
+
+# ── Inline tests ────────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    rm = RiskManager(daily_loss_limit=50.0, max_position_pct=0.05)
+
+    # kelly_stake — strong edge should give reasonable stake
+    stake = rm.kelly_stake(500, 0.87, 0.55)
+    assert 5 <= stake <= 25, f"Expected $5-$25, got ${stake:.2f}"
+
+    # kelly_stake — negative edge should return 0
+    stake_neg = rm.kelly_stake(500, 0.45, 0.55)
+    assert stake_neg == 0.0, f"Expected 0.0 for negative edge, got {stake_neg}"
+
+    # is_tradeable — good trade
+    ok, reason = rm.is_tradeable(0.12, 0.75, 1)
+    assert ok is True and reason == "", f"Expected tradeable, got ({ok}, {reason})"
+
+    # is_tradeable — edge too low
+    ok, reason = rm.is_tradeable(0.04, 0.75, 1)
+    assert ok is False and "edge" in reason.lower(), f"Expected edge rejection, got ({ok}, {reason})"
+
+    # is_tradeable — confidence too low
+    ok, reason = rm.is_tradeable(0.12, 0.50, 1)
+    assert ok is False and "confidence" in reason.lower(), f"Expected confidence rejection, got ({ok}, {reason})"
+
+    # is_tradeable — too many positions
+    ok, reason = rm.is_tradeable(0.12, 0.75, 5)
+    assert ok is False and "position" in reason.lower(), f"Expected position rejection, got ({ok}, {reason})"
+
+    # daily loss tracking
+    rm.record_loss(30.0)
+    assert not rm.daily_loss_breached()
+    rm.record_loss(25.0)
+    assert rm.daily_loss_breached()
+    rm.reset_daily()
+    assert not rm.daily_loss_breached()
+
+    print("All risk tests passed")
