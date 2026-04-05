@@ -82,6 +82,7 @@ class ScannerAgent:
         self._last_poly_refresh = 0.0
         self._espn_cache: dict = {}          # sport -> {team_name -> game_state}
         self._last_espn_refresh: dict = {}   # sport -> timestamp
+        self._recent_trades: dict = {}       # market_id -> last trade timestamp (dedup)
 
     async def _async_get(self, url: str, params: dict = None) -> Optional[dict]:
         """Run requests.get in executor to avoid blocking the event loop."""
@@ -336,6 +337,13 @@ class ScannerAgent:
             try:
                 opp = self._match_espn_to_polymarket(market)
                 if opp and opp.raw_edge >= RAW_EDGE_THRESHOLD:
+                    # Dedup: don't re-queue same market within 60 seconds
+                    mid = opp.market_id
+                    last_trade_time = self._recent_trades.get(mid, 0)
+                    if time.time() - last_trade_time < 60:
+                        continue
+                    self._recent_trades[mid] = time.time()
+
                     log.info(
                         f"EDGE FOUND  {opp.event_name} | "
                         f"{opp.our_side} edge={opp.raw_edge*100:.1f}% "
@@ -360,19 +368,23 @@ class ScannerAgent:
         matched_sport = ""
 
         for sport, games in self._espn_cache.items():
+            seen_teams = set()
             for key, gs in games.items():
-                # Check if any team name from ESPN appears in the Polymarket question
-                home_lower = gs["home_team"].lower()
-                away_lower = gs["away_team"].lower()
+                # Deduplicate (each game is indexed by multiple keys)
+                team_pair = f"{gs['home_team']}|{gs['away_team']}"
+                if team_pair in seen_teams:
+                    continue
+                seen_teams.add(team_pair)
 
-                # Match on team name fragments (e.g. "Lakers" in "Will the Los Angeles Lakers win...")
-                # Skip very common words that cause false matches
-                skip_words = {"will", "team", "city", "state", "west", "east", "north", "south", "york", "angeles", "diego", "francisco", "antonio", "orleans", "jose"}
-                home_words = [w for w in home_lower.split() if len(w) > 3 and w not in skip_words]
-                away_words = [w for w in away_lower.split() if len(w) > 3 and w not in skip_words]
+                # Use team nickname (last word) as primary match key
+                # e.g. "New England Patriots" -> "patriots"
+                # This prevents "New England" matching "England" in FIFA markets
+                home_nickname = gs["home_team"].split()[-1].lower() if gs["home_team"] else ""
+                away_nickname = gs["away_team"].split()[-1].lower() if gs["away_team"] else ""
 
-                home_match = any(w in q_lower for w in home_words) if home_words else False
-                away_match = any(w in q_lower for w in away_words) if away_words else False
+                # Require nickname (>3 chars) to appear in the Polymarket question
+                home_match = len(home_nickname) > 3 and home_nickname in q_lower
+                away_match = len(away_nickname) > 3 and away_nickname in q_lower
 
                 if home_match or away_match:
                     game_state = gs
@@ -574,14 +586,14 @@ class ScannerAgent:
         )
 
     def _find_poly_market_for_teams(self, home: str, away: str) -> Optional[dict]:
-        """Fuzzy match team names to a Polymarket market question."""
-        home_words = [w.lower() for w in home.split() if len(w) > 3]
-        away_words = [w.lower() for w in away.split() if len(w) > 3]
+        """Match team nicknames to a Polymarket market question."""
+        home_nick = home.split()[-1].lower() if home else ""
+        away_nick = away.split()[-1].lower() if away else ""
 
         for market in self._poly_markets:
             q = market["question"].lower()
-            home_match = any(w in q for w in home_words) if home_words else False
-            away_match = any(w in q for w in away_words) if away_words else False
+            home_match = len(home_nick) > 3 and home_nick in q
+            away_match = len(away_nick) > 3 and away_nick in q
             if home_match or away_match:
                 return market
         return None
