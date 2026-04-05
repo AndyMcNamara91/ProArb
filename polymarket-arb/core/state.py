@@ -46,6 +46,52 @@ class BotState:
         self._open_trades:   dict  = {}  # order_id → Trade
         self._daily_loss:    float = 0.0
         self._session_start: float = time.time()
+        self._load_pending_trades()
+
+    def _load_pending_trades(self) -> None:
+        """Reload pending_outcome trades from trades.jsonl on startup for dedup."""
+        if not LEDGER_FILE.exists():
+            return
+        try:
+            # Track latest status per order_id
+            latest: dict = {}
+            with LEDGER_FILE.open() as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    data = json.loads(line)
+                    oid = data.get("order_id", "")
+                    if oid:
+                        latest[oid] = data
+
+            # Restore only pending_outcome trades
+            for oid, data in latest.items():
+                if data.get("status") == "pending_outcome":
+                    trade = Trade(
+                        timestamp=data.get("timestamp", 0),
+                        market_id=data.get("market_id", ""),
+                        event_name=data.get("event_name", ""),
+                        side=data.get("side", ""),
+                        token_id=data.get("token_id", ""),
+                        entry_price=data.get("entry_price", 0),
+                        size_usdc=data.get("size_usdc", 0),
+                        edge_at_entry=data.get("edge_at_entry", 0),
+                        sports_prob=data.get("sports_prob", 0),
+                        poly_prob=data.get("poly_prob", 0),
+                        status="pending_outcome",
+                        order_id=oid,
+                        home_team=data.get("home_team"),
+                        away_team=data.get("away_team"),
+                        sport=data.get("sport"),
+                        bet_team=data.get("bet_team"),
+                    )
+                    self._open_trades[oid] = trade
+
+            if self._open_trades:
+                log.info(f"Restored {len(self._open_trades)} pending trades from ledger")
+        except Exception as e:
+            log.warning(f"Failed to load pending trades from ledger: {e}")
 
     # ── Trade lifecycle ──────────────────────────────────────────────────────
 
