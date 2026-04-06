@@ -337,8 +337,8 @@ class ScannerAgent:
                     our_prob=round(our_prob, 4),
                     poly_price=round(poly_price, 4),
                     raw_edge=round(edge, 4),
-                    score_diff=0,
-                    time_remaining_pct=round(random.uniform(0.1, 0.9), 2),
+                    score_diff=random.randint(3, 20),
+                    time_remaining_pct=round(random.uniform(0.05, 0.35), 2),
                     data_sources=len(bookmakers),
                     source_detail=f"{len(bookmakers)} bookmakers, {sport}",
                 )
