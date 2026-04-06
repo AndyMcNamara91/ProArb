@@ -30,7 +30,8 @@ from core.probability import (
 
 log = logging.getLogger("scanner")
 
-ODDS_API_KEY    = os.getenv("ODDS_API_KEY", "")
+def _get_odds_api_key() -> str:
+    return os.getenv("ODDS_API_KEY", "")
 POLY_GAMMA_BASE = "https://gamma-api.polymarket.com"
 ODDS_API_BASE   = "https://api.the-odds-api.com/v4"
 
@@ -77,7 +78,7 @@ class ScannerAgent:
         Run one scan cycle: fetch sports odds, compare to Polymarket, queue gaps.
         Called by main.py on each SCAN_INTERVAL_SEC tick.
         """
-        if not ODDS_API_KEY:
+        if not _get_odds_api_key():
             log.warning("ODDS_API_KEY not set — scanner running in demo mode")
             await self._demo_scan(queue)
             return
@@ -109,7 +110,8 @@ class ScannerAgent:
         if time.time() - self._last_poly_refresh < 300:
             return
         try:
-            resp = requests.get(
+            resp = await asyncio.to_thread(
+                requests.get,
                 f"{POLY_GAMMA_BASE}/markets",
                 params={"tag": "sports", "active": True, "limit": 200},
                 timeout=10,
@@ -135,14 +137,14 @@ class ScannerAgent:
     async def _scan_sport(self, sport: str) -> list[Opportunity]:
         """Fetch live in-game odds for a sport and compute edge vs Polymarket."""
         try:
-            resp = requests.get(
+            resp = await asyncio.to_thread(
+                requests.get,
                 f"{ODDS_API_BASE}/sports/{sport}/odds",
                 params={
-                    "apiKey":     ODDS_API_KEY,
+                    "apiKey":     _get_odds_api_key(),
                     "regions":    "us",
                     "markets":    "h2h",
                     "oddsFormat": "american",
-                    "commenceTimeFrom": _now_iso(),
                 },
                 timeout=8,
             )
