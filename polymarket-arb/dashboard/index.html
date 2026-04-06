@@ -25,6 +25,7 @@
   --blue:     #4d9fff;
   --blue-bg:  rgba(77,159,255,.08);
   --purple:   #a78bfa;
+  --purple-bg:rgba(167,139,250,.08);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -42,213 +43,134 @@ body {
   background-size: 48px 48px;
 }
 
-/* ── TOPBAR ──────────────────────────────────────────────── */
+/* TOPBAR */
 .topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 28px;
-  height: 52px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; height: 52px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   position: sticky; top: 0; z-index: 100;
 }
-
-.brand {
-  display: flex; align-items: center; gap: 10px;
-}
-
+.brand { display: flex; align-items: center; gap: 10px; }
 .brand-mark {
-  width: 28px; height: 28px;
-  background: var(--green);
-  border-radius: 6px;
+  width: 28px; height: 28px; background: var(--green); border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Syne', sans-serif;
-  font-weight: 800;
-  font-size: 14px;
-  color: var(--bg);
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; color: var(--bg);
 }
-
 .brand-name {
-  font-family: 'Syne', sans-serif;
-  font-weight: 700;
-  font-size: 15px;
-  letter-spacing: 2px;
-  color: var(--text);
+  font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px;
+  letter-spacing: 2px; color: var(--text);
 }
-
 .status-pill {
-  padding: 4px 14px;
-  border-radius: 20px;
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  padding: 4px 14px; border-radius: 20px;
+  font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500;
+  letter-spacing: 1px; text-transform: uppercase;
 }
 .status-pill.live { background: var(--green-bg); color: var(--green); border: 1px solid rgba(35,209,139,.2); }
 .status-pill.demo { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(240,165,0,.2); }
 .status-pill.stopped { background: var(--red-bg); color: var(--red); border: 1px solid rgba(241,76,76,.2); }
 .status-pill.offline { background: rgba(74,88,120,.1); color: var(--muted); border: 1px solid var(--border); }
+.topbar-right { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
 
-.topbar-right {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--muted);
-}
+/* LAYOUT */
+.container { max-width: 1400px; margin: 0 auto; padding: 24px 28px; }
 
-/* ── LAYOUT ──────────────────────────────────────────────── */
-.container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 24px 28px;
-}
-
-.main-grid {
-  display: grid;
-  grid-template-columns: 1fr 280px;
-  gap: 20px;
-}
-
-@media (max-width: 900px) {
-  .main-grid { grid-template-columns: 1fr; }
-}
-
-/* ── KPI CARDS ───────────────────────────────────────────── */
-.kpi-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-@media (max-width: 700px) {
-  .kpi-strip { grid-template-columns: repeat(2, 1fr); }
-}
-
+/* KPI CARDS */
+.kpi-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 20px; }
+@media (max-width: 1000px) { .kpi-strip { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 600px) { .kpi-strip { grid-template-columns: repeat(2, 1fr); } }
 .kpi-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px 18px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px;
 }
-
-.kpi-label {
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 6px;
-}
-
-.kpi-value {
-  font-family: 'DM Mono', monospace;
-  font-size: 26px;
-  font-weight: 500;
-}
-
-.kpi-sub {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 4px;
-}
-
+.kpi-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.kpi-value { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; }
+.kpi-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
 .positive { color: var(--green); }
 .negative { color: var(--red); }
 .neutral  { color: var(--blue); }
 
-/* ── DAILY LOSS GAUGE ────────────────────────────────────── */
+/* DAILY LOSS GAUGE */
 .loss-gauge {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px 18px;
-  margin-bottom: 20px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 18px; margin-bottom: 20px;
 }
-
 .loss-gauge-label {
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 8px;
-  display: flex;
-  justify-content: space-between;
+  font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 6px; display: flex; justify-content: space-between;
 }
-
-.loss-gauge-bar {
-  height: 8px;
-  background: var(--border);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.loss-gauge-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.5s ease, background 0.3s ease;
-  background: var(--green);
-}
-
+.loss-gauge-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.loss-gauge-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease, background 0.3s ease; background: var(--green); }
 .loss-gauge-fill.warn { background: var(--amber); }
 .loss-gauge-fill.danger { background: var(--red); }
 
-/* ── TRADE TABLE ─────────────────────────────────────────── */
+/* TABS */
+.tab-bar {
+  display: flex; gap: 0; margin-bottom: 0;
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  padding: 12px 24px; cursor: pointer;
+  font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--muted);
+  border-bottom: 2px solid transparent; transition: all 0.2s;
+  user-select: none;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+.tab-count {
+  display: inline-block; padding: 1px 7px; border-radius: 8px;
+  font-family: 'DM Mono', monospace; font-size: 10px; margin-left: 6px;
+  background: var(--border); color: var(--muted);
+}
+.tab.active .tab-count { background: var(--blue-bg); color: var(--blue); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* SECTION CARD */
 .section-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 0 0 10px 10px; overflow: hidden;
 }
 
-.section-header {
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--border);
-  font-family: 'Syne', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--muted);
+/* FILTER BAR */
+.filter-bar {
+  display: flex; gap: 8px; padding: 12px 18px; border-bottom: 1px solid var(--border);
+  flex-wrap: wrap; align-items: center;
 }
-
-.trade-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: 'DM Mono', monospace;
-  font-size: 12px;
+.filter-btn {
+  padding: 4px 12px; border-radius: 14px; border: 1px solid var(--border);
+  background: transparent; color: var(--muted); cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 11px; transition: all 0.15s;
 }
+.filter-btn:hover { border-color: var(--blue); color: var(--text); }
+.filter-btn.active { background: var(--blue-bg); border-color: var(--blue); color: var(--blue); }
 
-.trade-table th {
-  text-align: left;
-  padding: 10px 14px;
-  font-size: 10px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 1px solid var(--border);
-  font-weight: 400;
+/* TABLES */
+.data-table {
+  width: 100%; border-collapse: collapse;
+  font-family: 'DM Mono', monospace; font-size: 12px;
 }
-
-.trade-table td {
-  padding: 10px 14px;
-  border-bottom: 1px solid rgba(28,35,51,.5);
-  white-space: nowrap;
+.data-table th {
+  text-align: left; padding: 10px 12px; font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border);
+  font-weight: 400; position: sticky; top: 0; background: var(--card);
 }
+.data-table td {
+  padding: 8px 12px; border-bottom: 1px solid rgba(28,35,51,.5); white-space: nowrap;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover { background: rgba(77,159,255,.03); }
+.data-table .scroll-wrap { max-height: 520px; overflow-y: auto; }
 
-.trade-table tr:last-child td { border-bottom: none; }
-
-.trade-table tr:hover { background: rgba(77,159,255,.03); }
-
+/* PILLS */
 .pill {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  display: inline-block; padding: 2px 8px; border-radius: 10px;
+  font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase;
 }
+.pill.queued   { background: var(--blue-bg); color: var(--blue); }
+.pill.traded   { background: var(--green-bg); color: var(--green); }
+.pill.skipped  { background: rgba(74,88,120,.1); color: var(--muted); }
+.pill.no_match { background: rgba(74,88,120,.06); color: var(--dim); }
 .pill.open     { background: var(--blue-bg); color: var(--blue); }
 .pill.demo     { background: var(--amber-bg); color: var(--amber); }
 .pill.resolved { background: var(--green-bg); color: var(--green); }
@@ -256,55 +178,57 @@ body {
 .pill.lost     { background: var(--red-bg); color: var(--red); }
 .pill.cancelled { background: rgba(74,88,120,.1); color: var(--muted); }
 
-.empty-state {
-  padding: 40px;
-  text-align: center;
-  color: var(--muted);
-  font-size: 13px;
+/* EDGE BAR */
+.edge-bar {
+  display: inline-block; height: 6px; border-radius: 3px; min-width: 4px;
+  vertical-align: middle; margin-right: 6px;
 }
 
-/* ── SIDEBAR STATS ───────────────────────────────────────── */
+/* SPORT ICONS */
+.sport-tag {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 10px; letter-spacing: 0.5px;
+}
+.sport-tag.nba  { background: rgba(255,110,50,.1); color: #ff6e32; }
+.sport-tag.nfl  { background: rgba(0,130,60,.1); color: #00c853; }
+.sport-tag.mlb  { background: rgba(30,80,200,.1); color: #4d9fff; }
+.sport-tag.epl  { background: rgba(130,50,200,.1); color: #a78bfa; }
+.sport-tag.default { background: rgba(74,88,120,.1); color: var(--muted); }
+
+/* TWO-COL LAYOUT */
+.main-grid { display: grid; grid-template-columns: 1fr 300px; gap: 20px; margin-top: 20px; }
+@media (max-width: 1000px) { .main-grid { grid-template-columns: 1fr; } }
+
+/* SIDEBAR */
 .sidebar-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 18px;
-  margin-bottom: 12px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 18px; margin-bottom: 12px;
 }
-
+.sidebar-title {
+  font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--muted);
+  padding-bottom: 12px;
+}
 .stat-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(28,35,51,.5);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 0; border-bottom: 1px solid rgba(28,35,51,.5);
 }
-
 .stat-row:last-child { border-bottom: none; }
+.stat-label { font-size: 12px; color: var(--muted); }
+.stat-value { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; }
 
-.stat-label {
-  font-size: 12px;
-  color: var(--muted);
-}
+.empty-state { padding: 40px; text-align: center; color: var(--muted); font-size: 13px; }
 
-.stat-value {
-  font-family: 'DM Mono', monospace;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-/* ── OFFLINE BANNER ──────────────────────────────────────── */
+/* OFFLINE BANNER */
 .offline-banner {
-  background: var(--red-bg);
-  border: 1px solid rgba(241,76,76,.2);
-  border-radius: 8px;
-  padding: 12px 18px;
-  margin-bottom: 20px;
-  font-size: 13px;
-  color: var(--red);
-  display: none;
+  background: var(--red-bg); border: 1px solid rgba(241,76,76,.2); border-radius: 8px;
+  padding: 12px 18px; margin-bottom: 20px; font-size: 13px; color: var(--red); display: none;
 }
 .offline-banner.visible { display: block; }
+
+/* PROB COMPARISON */
+.prob-cell { display: flex; align-items: center; gap: 6px; }
+.prob-vs { color: var(--dim); font-size: 10px; }
 </style>
 </head>
 <body>
@@ -350,6 +274,16 @@ body {
       <div id="kpiOpen" class="kpi-value neutral">0</div>
       <div id="kpiUptime" class="kpi-sub">uptime: --</div>
     </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Games Scanned</div>
+      <div id="kpiGamesScanned" class="kpi-value neutral">0</div>
+      <div id="kpiPolyMatched" class="kpi-sub">poly matched: 0</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Edges Found</div>
+      <div id="kpiEdgesFound" class="kpi-value neutral">0</div>
+      <div id="kpiLastScan" class="kpi-sub">last scan: --</div>
+    </div>
   </div>
 
   <!-- DAILY LOSS GAUGE -->
@@ -363,35 +297,96 @@ body {
     </div>
   </div>
 
-  <!-- MAIN CONTENT -->
-  <div class="main-grid">
+  <!-- TABS -->
+  <div class="tab-bar">
+    <div class="tab active" data-tab="games">Games Scanned <span id="tabGamesCount" class="tab-count">0</span></div>
+    <div class="tab" data-tab="bets">Bets <span id="tabBetsCount" class="tab-count">0</span></div>
+  </div>
 
-    <!-- TRADE FEED -->
+  <!-- TAB: GAMES SCANNED -->
+  <div id="panelGames" class="tab-panel active">
     <div class="section-card">
-      <div class="section-header">Trade Feed</div>
-      <table class="trade-table">
-        <thead>
-          <tr>
-            <th>Time</th>
-            <th>Event</th>
-            <th>Side</th>
-            <th>Entry</th>
-            <th>Edge</th>
-            <th>Stake</th>
-            <th>Status</th>
-            <th>P&L</th>
-          </tr>
-        </thead>
-        <tbody id="tradeBody">
-          <tr><td colspan="8" class="empty-state">No trades yet</td></tr>
-        </tbody>
-      </table>
+      <div class="filter-bar">
+        <div class="filter-btn active" data-sport="all">All</div>
+        <div class="filter-btn" data-sport="basketball_nba">NBA</div>
+        <div class="filter-btn" data-sport="americanfootball_nfl">NFL</div>
+        <div class="filter-btn" data-sport="baseball_mlb">MLB</div>
+        <div class="filter-btn" data-sport="soccer_epl">EPL</div>
+      </div>
+      <div class="scroll-wrap" style="max-height: 560px; overflow-y: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Sport</th>
+              <th>Event</th>
+              <th>Pinnacle Home</th>
+              <th>Pinnacle Away</th>
+              <th>Poly Price</th>
+              <th>Edge</th>
+              <th>Spread</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="gamesBody">
+            <tr><td colspan="9" class="empty-state">No games scanned yet -- waiting for scanner</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
 
-    <!-- SIDEBAR -->
+  <!-- TAB: BETS -->
+  <div id="panelBets" class="tab-panel">
+    <div class="section-card">
+      <div class="filter-bar">
+        <div class="filter-btn active" data-status="all">All</div>
+        <div class="filter-btn" data-status="open">Open</div>
+        <div class="filter-btn" data-status="demo">Demo</div>
+        <div class="filter-btn" data-status="resolved">Resolved</div>
+        <div class="filter-btn" data-status="cancelled">Cancelled</div>
+      </div>
+      <div class="scroll-wrap" style="max-height: 560px; overflow-y: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Sport</th>
+              <th>Event</th>
+              <th>Side</th>
+              <th>Entry</th>
+              <th>Pinnacle</th>
+              <th>Edge</th>
+              <th>Stake</th>
+              <th>Kelly %</th>
+              <th>Status</th>
+              <th>P&L</th>
+              <th>CLV</th>
+            </tr>
+          </thead>
+          <tbody id="betsBody">
+            <tr><td colspan="12" class="empty-state">No bets placed yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM GRID: STATS SIDEBAR -->
+  <div class="main-grid">
     <div>
+      <!-- SPORT BREAKDOWN -->
       <div class="sidebar-card">
-        <div class="section-header" style="padding: 0 0 12px 0; border: none;">Stats</div>
+        <div class="sidebar-title">Sport Breakdown</div>
+        <div id="sportBreakdown">
+          <div class="stat-row"><span class="stat-label">No data yet</span><span class="stat-value">--</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <!-- STATS -->
+      <div class="sidebar-card">
+        <div class="sidebar-title">Trade Stats</div>
         <div class="stat-row">
           <span class="stat-label">Best Trade</span>
           <span id="statBest" class="stat-value positive">--</span>
@@ -418,123 +413,225 @@ body {
         </div>
       </div>
 
+      <!-- CONFIG -->
       <div class="sidebar-card">
-        <div class="section-header" style="padding: 0 0 12px 0; border: none;">Config</div>
+        <div class="sidebar-title">Config</div>
         <div class="stat-row">
           <span class="stat-label">Min Edge</span>
-          <span id="cfgEdge" class="stat-value">10%</span>
+          <span class="stat-value">10%</span>
         </div>
         <div class="stat-row">
           <span class="stat-label">Kelly</span>
-          <span id="cfgKelly" class="stat-value">25%</span>
+          <span class="stat-value">25%</span>
         </div>
         <div class="stat-row">
-          <span class="stat-label">Max Pos</span>
-          <span id="cfgMaxPos" class="stat-value">10</span>
+          <span class="stat-label">Max Positions</span>
+          <span class="stat-value">10</span>
         </div>
         <div class="stat-row">
           <span class="stat-label">Loss Limit</span>
-          <span id="cfgLossLimit" class="stat-value">20%</span>
+          <span class="stat-value">20%</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Max Per Trade</span>
+          <span class="stat-value">5%</span>
         </div>
       </div>
     </div>
-
   </div>
+
 </div>
 
 <script>
-const API_BASE = '';  // same origin
+const API = '';
+let currentSportFilter = 'all';
+let currentStatusFilter = 'all';
 
+// -- TAB SWITCHING --
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel' + capitalize(tab.dataset.tab)).classList.add('active');
+  });
+});
+
+// -- SPORT FILTER --
+document.querySelectorAll('#panelGames .filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#panelGames .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentSportFilter = btn.dataset.sport;
+    renderGames(window._lastGames || []);
+  });
+});
+
+// -- STATUS FILTER --
+document.querySelectorAll('#panelBets .filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#panelBets .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentStatusFilter = btn.dataset.status;
+    renderBets(window._lastTrades || []);
+  });
+});
+
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function sportTag(sport) {
+  const map = {
+    'basketball_nba': ['NBA', 'nba'],
+    'americanfootball_nfl': ['NFL', 'nfl'],
+    'baseball_mlb': ['MLB', 'mlb'],
+    'soccer_epl': ['EPL', 'epl'],
+  };
+  const [label, cls] = map[sport] || [sport.split('_').pop().toUpperCase(), 'default'];
+  return '<span class="sport-tag ' + cls + '">' + label + '</span>';
+}
+
+function edgeCell(edge) {
+  if (edge == null) return '<span style="color:var(--dim)">--</span>';
+  const pct = (edge * 100).toFixed(1);
+  let color = 'var(--muted)';
+  let width = Math.min(Math.abs(edge) * 500, 60);
+  if (edge >= 0.10) color = 'var(--green)';
+  else if (edge >= 0.08) color = 'var(--amber)';
+  else if (edge > 0) color = 'var(--muted)';
+  else { color = 'var(--red)'; }
+  return '<span class="edge-bar" style="width:' + width + 'px;background:' + color + '"></span>' +
+         '<span style="color:' + color + '">' + (edge >= 0 ? '+' : '') + pct + '%</span>';
+}
+
+function timeStr(ts) {
+  return new Date(ts * 1000).toLocaleTimeString();
+}
+
+// -- MAIN REFRESH --
 async function refresh() {
   try {
-    const [statusRes, tradesRes] = await Promise.all([
-      fetch(API_BASE + '/api/status'),
-      fetch(API_BASE + '/api/trades?limit=50'),
+    const [statusRes, tradesRes, gamesRes] = await Promise.all([
+      fetch(API + '/api/status'),
+      fetch(API + '/api/trades?limit=100'),
+      fetch(API + '/api/games?limit=200'),
     ]);
-
-    if (!statusRes.ok || !tradesRes.ok) throw new Error('API error');
+    if (!statusRes.ok || !tradesRes.ok || !gamesRes.ok) throw new Error('API error');
 
     const status = await statusRes.json();
     const tradesData = await tradesRes.json();
+    const gamesData = await gamesRes.json();
 
     renderStatus(status);
-    renderTrades(tradesData.trades || []);
+    renderGamesKPIs(gamesData);
+    window._lastGames = gamesData.games || [];
+    window._lastTrades = tradesData.trades || [];
+    renderGames(window._lastGames);
+    renderBets(window._lastTrades);
     renderStats(tradesData);
+    renderSportBreakdown(gamesData.sports || {});
     document.getElementById('offlineBanner').classList.remove('visible');
+
+    document.getElementById('tabGamesCount').textContent = (gamesData.games || []).length;
+    document.getElementById('tabBetsCount').textContent = (tradesData.trades || []).length;
   } catch (e) {
     document.getElementById('offlineBanner').classList.add('visible');
     document.getElementById('statusPill').className = 'status-pill offline';
     document.getElementById('statusPill').textContent = 'OFFLINE';
   }
-
   document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
 }
 
 function renderStatus(s) {
-  // Status pill
   const pill = document.getElementById('statusPill');
-  if (s.kill_switch_active) {
-    pill.className = 'status-pill stopped'; pill.textContent = 'STOPPED';
-  } else if (!s.running) {
-    pill.className = 'status-pill offline'; pill.textContent = 'OFFLINE';
-  } else if (s.demo_mode) {
-    pill.className = 'status-pill demo'; pill.textContent = 'DEMO';
-  } else {
-    pill.className = 'status-pill live'; pill.textContent = 'LIVE';
-  }
+  if (s.kill_switch_active) { pill.className = 'status-pill stopped'; pill.textContent = 'STOPPED'; }
+  else if (!s.running) { pill.className = 'status-pill offline'; pill.textContent = 'OFFLINE'; }
+  else if (s.demo_mode) { pill.className = 'status-pill demo'; pill.textContent = 'DEMO'; }
+  else { pill.className = 'status-pill live'; pill.textContent = 'LIVE'; }
 
-  // KPIs
   const pnlEl = document.getElementById('kpiPnl');
   pnlEl.textContent = '$' + (s.session_pnl >= 0 ? '+' : '') + s.session_pnl.toFixed(2);
   pnlEl.className = 'kpi-value ' + (s.session_pnl >= 0 ? 'positive' : 'negative');
+  document.getElementById('kpiBankroll').textContent = 'bankroll: ' + (s.bankroll != null ? '$' + s.bankroll.toFixed(0) : '--');
 
-  document.getElementById('kpiBankroll').textContent =
-    'bankroll: ' + (s.bankroll != null ? '$' + s.bankroll.toFixed(0) : '--');
-
-  const wrEl = document.getElementById('kpiWinRate');
-  wrEl.textContent = s.win_rate != null ? s.win_rate.toFixed(1) + '%' : '--%';
-
-  document.getElementById('kpiClv').textContent =
-    'CLV: ' + (s.average_clv != null ? s.average_clv.toFixed(2) + '%' : '--');
+  document.getElementById('kpiWinRate').textContent = s.win_rate != null ? s.win_rate.toFixed(1) + '%' : '--%';
+  document.getElementById('kpiClv').textContent = 'CLV: ' + (s.average_clv != null ? s.average_clv.toFixed(2) + '%' : '--');
 
   document.getElementById('kpiTrades').textContent = s.trades_placed || 0;
   document.getElementById('kpiSkipped').textContent = 'skipped: ' + (s.trades_skipped || 0);
 
   document.getElementById('kpiOpen').textContent = s.open_positions || 0;
-
   const uptime = s.uptime_seconds || 0;
   const mins = Math.floor(uptime / 60);
   const hrs = Math.floor(mins / 60);
-  document.getElementById('kpiUptime').textContent =
-    'uptime: ' + (hrs > 0 ? hrs + 'h ' + (mins % 60) + 'm' : mins + 'm');
+  document.getElementById('kpiUptime').textContent = 'uptime: ' + (hrs > 0 ? hrs + 'h ' + (mins % 60) + 'm' : mins + 'm');
 
-  // Daily loss gauge
   const lossPct = s.daily_loss_pct || 0;
-  const maxPct = 20; // from config
-  const fillPct = Math.min((lossPct / maxPct) * 100, 100);
+  const fillPct = Math.min((lossPct / 20) * 100, 100);
   const fill = document.getElementById('lossFill');
   fill.style.width = fillPct + '%';
-  fill.className = 'loss-gauge-fill' +
-    (fillPct >= 85 ? ' danger' : fillPct >= 60 ? ' warn' : '');
-  document.getElementById('lossText').textContent =
-    lossPct.toFixed(1) + '% / ' + maxPct + '%';
+  fill.className = 'loss-gauge-fill' + (fillPct >= 85 ? ' danger' : fillPct >= 60 ? ' warn' : '');
+  document.getElementById('lossText').textContent = lossPct.toFixed(1) + '% / 20%';
 }
 
-function renderTrades(trades) {
-  const tbody = document.getElementById('tradeBody');
+function renderGamesKPIs(data) {
+  const games = data.games || [];
+  const matched = games.filter(g => g.poly_matched).length;
+  const edges = games.filter(g => g.edge_pct != null && g.edge_pct >= 8).length;
+  document.getElementById('kpiGamesScanned').textContent = games.length;
+  document.getElementById('kpiPolyMatched').textContent = 'poly matched: ' + matched;
+  document.getElementById('kpiEdgesFound').textContent = edges;
+  if (data.last_scan) {
+    document.getElementById('kpiLastScan').textContent = 'last scan: ' + timeStr(data.last_scan);
+  }
+}
 
-  if (!trades.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No trades yet</td></tr>';
+function renderGames(games) {
+  const tbody = document.getElementById('gamesBody');
+  let filtered = games;
+  if (currentSportFilter !== 'all') {
+    filtered = games.filter(g => g.sport === currentSportFilter);
+  }
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">No games ' +
+      (currentSportFilter !== 'all' ? 'for this sport' : 'scanned yet') + '</td></tr>';
     return;
   }
 
-  tbody.innerHTML = trades.map(t => {
-    const time = new Date(t.entry_time * 1000).toLocaleTimeString();
-    const event = (t.event_name || '').replace('DEMO ', '');
-    const edge = ((t.edge_at_entry || 0) * 100).toFixed(1) + '%';
-    const stake = '$' + (t.size_usdc || 0).toFixed(2);
-    const entry = (t.entry_price || 0).toFixed(2);
+  tbody.innerHTML = filtered.map(g => {
+    const polyPrice = g.polymarket_price != null ? g.polymarket_price.toFixed(3) : '<span style="color:var(--dim)">--</span>';
+    const spreadStr = g.spread > 0 ? g.spread.toFixed(3) : '<span style="color:var(--dim)">--</span>';
+    const actionClass = g.action || 'skipped';
 
+    return '<tr>' +
+      '<td>' + timeStr(g.timestamp) + '</td>' +
+      '<td>' + sportTag(g.sport) + '</td>' +
+      '<td style="white-space:normal;max-width:220px">' + g.event_name + '</td>' +
+      '<td><span style="color:var(--text)">' + g.pinnacle_home_prob.toFixed(3) + '</span> <span style="color:var(--dim);font-size:10px">(' + g.pinnacle_home_odds.toFixed(2) + ')</span></td>' +
+      '<td><span style="color:var(--text)">' + g.pinnacle_away_prob.toFixed(3) + '</span> <span style="color:var(--dim);font-size:10px">(' + g.pinnacle_away_odds.toFixed(2) + ')</span></td>' +
+      '<td>' + polyPrice + '</td>' +
+      '<td>' + edgeCell(g.edge) + '</td>' +
+      '<td>' + spreadStr + '</td>' +
+      '<td><span class="pill ' + actionClass + '">' + actionClass.replace('_', ' ') + '</span></td>' +
+      '</tr>';
+  }).join('');
+}
+
+function renderBets(trades) {
+  const tbody = document.getElementById('betsBody');
+  let filtered = trades;
+  if (currentStatusFilter !== 'all') {
+    filtered = trades.filter(t => t.status === currentStatusFilter || t.outcome === currentStatusFilter);
+  }
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="12" class="empty-state">No bets ' +
+      (currentStatusFilter !== 'all' ? 'with this status' : 'placed yet') + '</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(t => {
+    const event = (t.event_name || '').replace('DEMO ', '');
     let statusClass = t.status || 'open';
     if (t.outcome === 'won') statusClass = 'won';
     if (t.outcome === 'lost') statusClass = 'lost';
@@ -542,17 +639,29 @@ function renderTrades(trades) {
 
     const pnl = t.pnl != null
       ? '<span class="' + (t.pnl >= 0 ? 'positive' : 'negative') + '">$' + (t.pnl >= 0 ? '+' : '') + t.pnl.toFixed(2) + '</span>'
-      : '<span class="neutral">--</span>';
+      : '<span style="color:var(--dim)">--</span>';
+
+    const clv = t.pinnacle_prob_at_close != null
+      ? ((t.pinnacle_prob_at_close - t.entry_price) * 100).toFixed(1) + '%'
+      : '<span style="color:var(--dim)">--</span>';
+
+    const kellyPct = t.size_usdc && t.entry_price
+      ? ((t.size_usdc / 500) * 100).toFixed(1) + '%'
+      : '--';
 
     return '<tr>' +
-      '<td>' + time + '</td>' +
-      '<td>' + event + '</td>' +
+      '<td>' + timeStr(t.entry_time) + '</td>' +
+      '<td>' + sportTag(t.sport || '') + '</td>' +
+      '<td style="white-space:normal;max-width:200px">' + event + '</td>' +
       '<td>' + t.side + '</td>' +
-      '<td>' + entry + '</td>' +
-      '<td>' + edge + '</td>' +
-      '<td>' + stake + '</td>' +
+      '<td>' + (t.entry_price || 0).toFixed(3) + '</td>' +
+      '<td>' + (t.pinnacle_prob_at_entry || 0).toFixed(3) + '</td>' +
+      '<td>' + edgeCell(t.edge_at_entry) + '</td>' +
+      '<td>$' + (t.size_usdc || 0).toFixed(2) + '</td>' +
+      '<td>' + kellyPct + '</td>' +
       '<td><span class="pill ' + statusClass + '">' + statusText + '</span></td>' +
       '<td>' + pnl + '</td>' +
+      '<td>' + clv + '</td>' +
       '</tr>';
   }).join('');
 }
@@ -575,14 +684,40 @@ function renderStats(data) {
     document.getElementById('statAvgEdge').textContent = (avg * 100).toFixed(1) + '%';
   }
 
-  document.getElementById('statVolume').textContent =
-    '$' + (data.total_volume || 0).toFixed(0);
+  document.getElementById('statVolume').textContent = '$' + (data.total_volume || 0).toFixed(0);
+
+  const filled = trades.filter(t => t.status !== 'cancelled').length;
+  const total = trades.length;
+  document.getElementById('statFillRate').textContent = total > 0 ? Math.round(filled / total * 100) + '%' : '--';
 }
 
-// Auto-refresh every 3 seconds
+function renderSportBreakdown(sports) {
+  const el = document.getElementById('sportBreakdown');
+  const keys = Object.keys(sports);
+  if (!keys.length) {
+    el.innerHTML = '<div class="stat-row"><span class="stat-label">No data yet</span><span class="stat-value">--</span></div>';
+    return;
+  }
+
+  const nameMap = {
+    'basketball_nba': 'NBA',
+    'americanfootball_nfl': 'NFL',
+    'baseball_mlb': 'MLB',
+    'soccer_epl': 'EPL',
+  };
+
+  el.innerHTML = keys.map(k => {
+    const s = sports[k];
+    const name = nameMap[k] || k;
+    return '<div class="stat-row">' +
+      '<span class="stat-label">' + name + '</span>' +
+      '<span class="stat-value">' + s.total + ' scanned / ' + s.matched + ' matched / ' + s.with_edge + ' edge</span>' +
+      '</div>';
+  }).join('');
+}
+
 setInterval(refresh, 3000);
 refresh();
 </script>
-
 </body>
 </html>

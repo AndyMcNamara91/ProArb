@@ -26,7 +26,7 @@ from typing import Optional
 import httpx
 
 from core.devig import american_to_decimal, devig_power
-from core.models import Opportunity
+from core.models import Opportunity, ScanResult
 from core.state import BotState
 
 log = logging.getLogger("scanner")
@@ -197,7 +197,8 @@ class ScannerModule:
 
         opportunities = []
         for event in events:
-            opp = self._process_event(event, sport)
+            opp, scan_result = self._process_event(event, sport)
+
             if opp:
                 # Enrich with order book data for real markets
                 if not opp.token_id.startswith("demo-"):
@@ -212,11 +213,29 @@ class ScannerModule:
                     if opp.our_side == "YES" and book["best_ask"] > 0:
                         opp.polymarket_price = book["best_ask"]
                         opp.edge = opp.pinnacle_fair_prob - opp.polymarket_price
+
+                    # Update scan result with book data
+                    if scan_result:
+                        scan_result.best_bid = opp.best_bid
+                        scan_result.best_ask = opp.best_ask
+                        scan_result.spread = opp.bid_ask_spread
+                        scan_result.liquidity = opp.polymarket_liquidity
+                        scan_result.edge = opp.edge
+
                 opportunities.append(opp)
+
+            # Record scan result for every game evaluated
+            if scan_result:
+                self.state.record_scan(scan_result)
+
         return opportunities
 
-    def _process_event(self, event: dict, sport: str) -> Optional[Opportunity]:
-        """Extract Pinnacle odds from event, de-vig, compare to Polymarket."""
+    def _process_event(self, event: dict, sport: str) -> tuple[Optional[Opportunity], Optional[ScanResult]]:
+        """Extract Pinnacle odds from event, de-vig, compare to Polymarket.
+
+        Returns (opportunity_or_None, scan_result) -- scan_result is always
+        produced for every Pinnacle event so the dashboard can show all games.
+        """
         home = event.get("home_team", "")
         away = event.get("away_team", "")
         event_name = f"{away} @ {home}"
@@ -224,7 +243,7 @@ class ScannerModule:
         # Get Pinnacle odds (should be only bookmaker since we filtered)
         bookmakers = event.get("bookmakers", [])
         if not bookmakers:
-            return None
+            return None, None
 
         home_odds = None
         away_odds = None
@@ -241,32 +260,55 @@ class ScannerModule:
                         away_odds = outcome.get("price")
 
         if home_odds is None or away_odds is None:
-            return None
+            return None, None
 
         # De-vig using Power method
         home_fair, away_fair = devig_power(home_odds, away_odds)
 
+        # Base scan result (always created for dashboard)
+        scan = ScanResult(
+            timestamp=time.time(),
+            event_name=event_name,
+            sport=sport,
+            home_team=home,
+            away_team=away,
+            pinnacle_home_odds=home_odds,
+            pinnacle_away_odds=away_odds,
+            pinnacle_home_prob=home_fair,
+            pinnacle_away_prob=away_fair,
+        )
+
         # Find matching Polymarket market
         poly_info = self._find_poly_market(home, away)
         if not poly_info:
-            return None
+            scan.action = "no_match"
+            return None, scan
 
         poly_yes_price, yes_token_id, poly_no_price, no_token_id = self._get_poly_prices(poly_info)
         if poly_yes_price is None:
-            return None
+            scan.action = "no_match"
+            return None, scan
+
+        scan.poly_matched = True
+        scan.polymarket_price = poly_yes_price
 
         # Check WebSocket prices if available (more up-to-date)
         ws_data = self._ws_prices.get(yes_token_id)
         if ws_data:
             poly_yes_price = ws_data.get("price", poly_yes_price)
+            scan.polymarket_price = poly_yes_price
 
         # Determine which side has edge
         # YES token = home team win on most Polymarket sports markets
         home_edge = home_fair - poly_yes_price
         away_edge = away_fair - (1.0 - poly_yes_price)
+        best_edge = max(home_edge, away_edge)
+        scan.edge = best_edge
+        scan.our_side = "YES" if home_edge >= away_edge else "NO"
 
         if home_edge >= away_edge and home_edge >= RAW_EDGE_THRESHOLD:
-            return Opportunity(
+            scan.action = "queued"
+            opp = Opportunity(
                 timestamp=time.time(),
                 event_name=event_name,
                 sport=sport,
@@ -284,9 +326,11 @@ class ScannerModule:
                 best_ask=ws_data.get("best_ask", 0.0) if ws_data else 0.0,
                 bid_ask_spread=ws_data.get("spread", 0.0) if ws_data else 0.0,
             )
+            return opp, scan
         elif away_edge >= RAW_EDGE_THRESHOLD:
+            scan.action = "queued"
             poly_no = 1.0 - poly_yes_price
-            return Opportunity(
+            opp = Opportunity(
                 timestamp=time.time(),
                 event_name=event_name,
                 sport=sport,
@@ -304,8 +348,10 @@ class ScannerModule:
                 best_ask=0.0,
                 bid_ask_spread=0.0,
             )
+            return opp, scan
 
-        return None
+        scan.action = "skipped"
+        return None, scan
 
     # -- Polymarket market discovery (Gamma API) -------------------------
 
@@ -559,9 +605,8 @@ class ScannerModule:
             return
 
         import random
-        if random.random() > 0.3:  # 30% chance of finding something
-            return
 
+        # Always generate scan results for the dashboard, even when no edge found
         fake_scenarios = [
             {
                 "event": "Toronto Raptors @ Boston Celtics",
@@ -570,6 +615,8 @@ class ScannerModule:
                 "away": "Toronto Raptors",
                 "home_fair": 0.755,
                 "away_fair": 0.245,
+                "home_odds": 1.32,
+                "away_odds": 4.08,
                 "poly_price": 0.63,
                 "side": "YES",
             },
@@ -580,6 +627,8 @@ class ScannerModule:
                 "away": "Houston Astros",
                 "home_fair": 0.62,
                 "away_fair": 0.38,
+                "home_odds": 1.61,
+                "away_odds": 2.63,
                 "poly_price": 0.48,
                 "side": "YES",
             },
@@ -590,14 +639,96 @@ class ScannerModule:
                 "away": "Buffalo Bills",
                 "home_fair": 0.68,
                 "away_fair": 0.32,
+                "home_odds": 1.47,
+                "away_odds": 3.13,
                 "poly_price": 0.55,
                 "side": "YES",
             },
         ]
 
+        # Also emit "no edge" games for realism in the scan log
+        no_edge_games = [
+            {
+                "event": "Miami Heat @ Milwaukee Bucks",
+                "sport": "basketball_nba",
+                "home": "Milwaukee Bucks",
+                "away": "Miami Heat",
+                "home_fair": 0.61,
+                "away_fair": 0.39,
+                "home_odds": 1.64,
+                "away_odds": 2.56,
+                "poly_price": 0.60,
+            },
+            {
+                "event": "Chicago Cubs @ Atlanta Braves",
+                "sport": "baseball_mlb",
+                "home": "Atlanta Braves",
+                "away": "Chicago Cubs",
+                "home_fair": 0.58,
+                "away_fair": 0.42,
+                "home_odds": 1.72,
+                "away_odds": 2.38,
+                "poly_price": 0.57,
+            },
+            {
+                "event": "Arsenal @ Liverpool",
+                "sport": "soccer_epl",
+                "home": "Liverpool",
+                "away": "Arsenal",
+                "home_fair": 0.45,
+                "away_fair": 0.55,
+                "home_odds": 2.22,
+                "away_odds": 1.82,
+                "poly_price": 0.44,
+            },
+        ]
+
+        # Record all "no edge" games in scan log
+        for game in no_edge_games:
+            edge = game["home_fair"] - game["poly_price"]
+            scan = ScanResult(
+                timestamp=time.time(),
+                event_name=game["event"],
+                sport=game["sport"],
+                home_team=game["home"],
+                away_team=game["away"],
+                pinnacle_home_odds=game["home_odds"],
+                pinnacle_away_odds=game["away_odds"],
+                pinnacle_home_prob=game["home_fair"],
+                pinnacle_away_prob=game["away_fair"],
+                polymarket_price=game["poly_price"],
+                poly_matched=True,
+                our_side="YES" if edge > 0 else "NO",
+                edge=edge,
+                action="skipped",
+            )
+            self.state.record_scan(scan)
+
+        if random.random() > 0.3:  # 30% chance of finding something with edge
+            return
+
         scenario = random.choice(fake_scenarios)
         fair_prob = scenario["home_fair"] if scenario["side"] == "YES" else scenario["away_fair"]
         edge = fair_prob - scenario["poly_price"]
+
+        # Record in scan log as "queued"
+        scan = ScanResult(
+            timestamp=time.time(),
+            event_name=f"DEMO {scenario['event']}",
+            sport=scenario["sport"],
+            home_team=scenario["home"],
+            away_team=scenario["away"],
+            pinnacle_home_odds=scenario["home_odds"],
+            pinnacle_away_odds=scenario["away_odds"],
+            pinnacle_home_prob=scenario["home_fair"],
+            pinnacle_away_prob=scenario["away_fair"],
+            polymarket_price=scenario["poly_price"],
+            poly_matched=True,
+            our_side=scenario["side"],
+            edge=edge,
+            action="queued",
+        )
+        self.state.record_scan(scan)
 
         opp = Opportunity(
             timestamp=time.time(),

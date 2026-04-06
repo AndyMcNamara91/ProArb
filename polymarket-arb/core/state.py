@@ -12,7 +12,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Optional
 
-from core.models import TradeRecord
+from core.models import ScanResult, TradeRecord
 
 log = logging.getLogger("state")
 
@@ -43,6 +43,10 @@ class BotState:
 
         # All resolved trades for CLV tracking
         self._resolved_trades: list[TradeRecord] = []
+
+        # Scan log: every game checked (capped at last 500)
+        self._scan_results: list[ScanResult] = []
+        self._max_scan_results: int = 500
 
     # -- Trade lifecycle -------------------------------------------------
 
@@ -175,6 +179,23 @@ class BotState:
                 f.write(trade.model_dump_json() + "\n")
         except Exception as e:
             log.warning(f"Ledger write failed: {e}")
+
+    # -- Scan results log ------------------------------------------------
+
+    def record_scan(self, result: ScanResult) -> None:
+        self._scan_results.append(result)
+        if len(self._scan_results) > self._max_scan_results:
+            self._scan_results = self._scan_results[-self._max_scan_results:]
+
+    @property
+    def scan_results(self) -> list[ScanResult]:
+        return list(self._scan_results)
+
+    @property
+    def last_scan_time(self) -> Optional[float]:
+        if not self._scan_results:
+            return None
+        return self._scan_results[-1].timestamp
 
     def find_trades_for_event(self, event_name: str) -> list[TradeRecord]:
         """Find open trades matching an event name (for resolver)."""

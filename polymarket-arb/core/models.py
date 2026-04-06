@@ -90,6 +90,31 @@ class TradeRecord(BaseModel):
         return self.pinnacle_prob_at_close - self.entry_price
 
 
+class ScanResult(BaseModel):
+    """Record of every game evaluated during a scan cycle."""
+    timestamp: float
+    event_name: str
+    sport: str
+    home_team: str
+    away_team: str
+    pinnacle_home_odds: float = 0.0       # raw Pinnacle decimal odds
+    pinnacle_away_odds: float = 0.0
+    pinnacle_home_prob: float = 0.0       # de-vigged fair probabilities
+    pinnacle_away_prob: float = 0.0
+    polymarket_price: Optional[float] = None  # Polymarket YES price (None = no match)
+    poly_matched: bool = False            # did we find a Polymarket market?
+    our_side: Optional[str] = None        # YES or NO (if edge found)
+    edge: Optional[float] = None          # calculated edge (if any)
+    best_bid: float = 0.0
+    best_ask: float = 0.0
+    spread: float = 0.0
+    liquidity: float = 0.0
+    # Gate results
+    passed_all_gates: bool = False
+    gate_results: dict = {}               # gate_name -> {passed: bool, reason: str}
+    action: str = "skipped"               # "skipped" | "queued" | "traded" | "no_match"
+
+
 class RiskLimits(BaseModel):
     """Risk parameters -- loaded from environment."""
     daily_loss_limit_pct: float = 0.20          # 20% of starting daily bankroll

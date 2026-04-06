@@ -118,6 +118,70 @@ async def get_trades(
     }
 
 
+@app.get("/api/games")
+async def get_games(
+    limit: int = Query(100, ge=1, le=500),
+    sport: Optional[str] = Query(None),
+):
+    """Return all scanned games from the scanner's evaluation log."""
+    state = getattr(app.state, "bot_state", None)
+    if not state:
+        return {"games": [], "total": 0, "last_scan": None, "sports": {}}
+
+    results = state.scan_results
+
+    # Filter by sport if provided
+    if sport:
+        results = [r for r in results if r.sport == sport]
+
+    # Most recent first
+    results.sort(key=lambda r: r.timestamp, reverse=True)
+    results = results[:limit]
+
+    # Sport breakdown
+    all_results = state.scan_results
+    sport_counts: dict[str, dict] = {}
+    for r in all_results:
+        if r.sport not in sport_counts:
+            sport_counts[r.sport] = {"total": 0, "matched": 0, "with_edge": 0}
+        sport_counts[r.sport]["total"] += 1
+        if r.poly_matched:
+            sport_counts[r.sport]["matched"] += 1
+        if r.edge is not None and r.edge >= 0.08:
+            sport_counts[r.sport]["with_edge"] += 1
+
+    games = []
+    for r in results:
+        games.append({
+            "timestamp": r.timestamp,
+            "event_name": r.event_name,
+            "sport": r.sport,
+            "home_team": r.home_team,
+            "away_team": r.away_team,
+            "pinnacle_home_odds": round(r.pinnacle_home_odds, 3),
+            "pinnacle_away_odds": round(r.pinnacle_away_odds, 3),
+            "pinnacle_home_prob": round(r.pinnacle_home_prob, 4),
+            "pinnacle_away_prob": round(r.pinnacle_away_prob, 4),
+            "polymarket_price": round(r.polymarket_price, 4) if r.polymarket_price is not None else None,
+            "poly_matched": r.poly_matched,
+            "our_side": r.our_side,
+            "edge": round(r.edge, 4) if r.edge is not None else None,
+            "edge_pct": round(r.edge * 100, 1) if r.edge is not None else None,
+            "best_bid": round(r.best_bid, 4),
+            "best_ask": round(r.best_ask, 4),
+            "spread": round(r.spread, 4),
+            "liquidity": round(r.liquidity, 0),
+            "action": r.action,
+        })
+
+    return {
+        "games": games,
+        "total": len(games),
+        "last_scan": state.last_scan_time,
+        "sports": sport_counts,
+    }
+
+
 def _read_ledger() -> list[dict]:
     """Read trades.jsonl and return list of trade dicts.
 
