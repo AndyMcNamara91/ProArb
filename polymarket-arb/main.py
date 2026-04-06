@@ -24,6 +24,9 @@ from pathlib import Path
 import colorlog
 from dotenv import load_dotenv
 
+# Load .env BEFORE importing modules (they read os.getenv at import time)
+load_dotenv()
+
 from core.models import RiskLimits
 from core.risk import RiskManager
 from core.state import BotState
@@ -31,8 +34,6 @@ from modules.scanner import ScannerModule, ODDS_API_POLL_INTERVAL
 from modules.gatekeeper import GatekeeperModule
 from modules.executor import ExecutorModule
 from modules.resolver import ResolverModule, ESPN_POLL_INTERVAL
-
-load_dotenv()
 
 # -- Logging ----------------------------------------------------------------
 
@@ -125,8 +126,10 @@ async def main():
 
     # -- Scanner loop ----------------------------------------------------
     async def run_scanner():
-        # In demo mode, scan more frequently for testing
-        interval = 10 if DEMO_MODE else SCAN_INTERVAL_SEC
+        # Use real interval when API key is set (costs credits per call).
+        # Only use fast 10s interval for demo scans with no API key.
+        has_api_key = bool(os.getenv("ODDS_API_KEY", ""))
+        interval = SCAN_INTERVAL_SEC if has_api_key else 10
         while not KILL_FILE.exists():
             try:
                 await scanner.scan(opportunity_queue)
