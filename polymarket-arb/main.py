@@ -101,6 +101,28 @@ async def main():
     log.info(f"Max positions: {limits.max_open_positions}")
     log.info(f"Max daily trades: {limits.max_daily_trades}")
 
+    # -- Start dashboard server ------------------------------------------
+    dashboard_port = int(os.getenv("DASHBOARD_PORT", 8080))
+
+    async def run_dashboard():
+        try:
+            import uvicorn
+            from dashboard.server import app as dashboard_app
+            dashboard_app.state.bot_state = state
+            config = uvicorn.Config(
+                dashboard_app,
+                host="0.0.0.0",
+                port=dashboard_port,
+                log_level="warning",
+            )
+            server = uvicorn.Server(config)
+            log.info(f"Dashboard: http://localhost:{dashboard_port}")
+            await server.serve()
+        except ImportError:
+            log.warning("uvicorn/fastapi not installed -- dashboard disabled")
+        except Exception as e:
+            log.warning(f"Dashboard failed to start: {e}")
+
     # -- Scanner loop ----------------------------------------------------
     async def run_scanner():
         # In demo mode, scan more frequently for testing
@@ -195,6 +217,7 @@ async def main():
             run_executor(),
             run_resolver(),
             run_risk_monitor(),
+            run_dashboard(),
         )
     except KeyboardInterrupt:
         log.info("Keyboard interrupt -- shutting down")

@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProArb V2 — Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root {
+  --bg:       #080a0d;
+  --surface:  #0d1117;
+  --card:     #111620;
+  --border:   #1c2333;
+  --border2:  #263044;
+  --text:     #cdd9f0;
+  --muted:    #4a5878;
+  --dim:      #2a3550;
+  --green:    #23d18b;
+  --green-bg: rgba(35,209,139,.08);
+  --red:      #f14c4c;
+  --red-bg:   rgba(241,76,76,.08);
+  --amber:    #f0a500;
+  --amber-bg: rgba(240,165,0,.08);
+  --blue:     #4d9fff;
+  --blue-bg:  rgba(77,159,255,.08);
+  --purple:   #a78bfa;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  background-image:
+    linear-gradient(rgba(77,159,255,.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(77,159,255,.015) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ── TOPBAR ──────────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+}
+
+.brand {
+  display: flex; align-items: center; gap: 10px;
+}
+
+.brand-mark {
+  width: 28px; height: 28px;
+  background: var(--green);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--bg);
+}
+
+.brand-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+
+.status-pill {
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.status-pill.live { background: var(--green-bg); color: var(--green); border: 1px solid rgba(35,209,139,.2); }
+.status-pill.demo { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(240,165,0,.2); }
+.status-pill.stopped { background: var(--red-bg); color: var(--red); border: 1px solid rgba(241,76,76,.2); }
+.status-pill.offline { background: rgba(74,88,120,.1); color: var(--muted); border: 1px solid var(--border); }
+
+.topbar-right {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ── LAYOUT ──────────────────────────────────────────────── */
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 28px;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .main-grid { grid-template-columns: 1fr; }
+}
+
+/* ── KPI CARDS ───────────────────────────────────────────── */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 700px) {
+  .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+}
+
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+
+.kpi-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.kpi-value {
+  font-family: 'DM Mono', monospace;
+  font-size: 26px;
+  font-weight: 500;
+}
+
+.kpi-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.positive { color: var(--green); }
+.negative { color: var(--red); }
+.neutral  { color: var(--blue); }
+
+/* ── DAILY LOSS GAUGE ────────────────────────────────────── */
+.loss-gauge {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+
+.loss-gauge-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.loss-gauge-bar {
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.loss-gauge-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease, background 0.3s ease;
+  background: var(--green);
+}
+
+.loss-gauge-fill.warn { background: var(--amber); }
+.loss-gauge-fill.danger { background: var(--red); }
+
+/* ── TRADE TABLE ─────────────────────────────────────────── */
+.section-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.section-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.trade-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+}
+
+.trade-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+}
+
+.trade-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(28,35,51,.5);
+  white-space: nowrap;
+}
+
+.trade-table tr:last-child td { border-bottom: none; }
+
+.trade-table tr:hover { background: rgba(77,159,255,.03); }
+
+.pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.pill.open     { background: var(--blue-bg); color: var(--blue); }
+.pill.demo     { background: var(--amber-bg); color: var(--amber); }
+.pill.resolved { background: var(--green-bg); color: var(--green); }
+.pill.won      { background: var(--green-bg); color: var(--green); }
+.pill.lost     { background: var(--red-bg); color: var(--red); }
+.pill.cancelled { background: rgba(74,88,120,.1); color: var(--muted); }
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ── SIDEBAR STATS ───────────────────────────────────────── */
+.sidebar-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 12px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(28,35,51,.5);
+}
+
+.stat-row:last-child { border-bottom: none; }
+
+.stat-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.stat-value {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ── OFFLINE BANNER ──────────────────────────────────────── */
+.offline-banner {
+  background: var(--red-bg);
+  border: 1px solid rgba(241,76,76,.2);
+  border-radius: 8px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--red);
+  display: none;
+}
+.offline-banner.visible { display: block; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">P</div>
+    <div class="brand-name">PROARB V2</div>
+  </div>
+  <div id="statusPill" class="status-pill offline">OFFLINE</div>
+  <div class="topbar-right">
+    <span id="lastUpdated">--:--:--</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- OFFLINE BANNER -->
+  <div id="offlineBanner" class="offline-banner">
+    Bot offline -- start with: <code>python main.py</code>
+  </div>
+
+  <!-- KPI STRIP -->
+  <div class="kpi-strip">
+    <div class="kpi-card">
+      <div class="kpi-label">Session P&L</div>
+      <div id="kpiPnl" class="kpi-value neutral">$0.00</div>
+      <div id="kpiBankroll" class="kpi-sub">bankroll: --</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Win Rate</div>
+      <div id="kpiWinRate" class="kpi-value neutral">--%</div>
+      <div id="kpiClv" class="kpi-sub">CLV: --</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Trades Today</div>
+      <div id="kpiTrades" class="kpi-value neutral">0</div>
+      <div id="kpiSkipped" class="kpi-sub">skipped: 0</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Open Positions</div>
+      <div id="kpiOpen" class="kpi-value neutral">0</div>
+      <div id="kpiUptime" class="kpi-sub">uptime: --</div>
+    </div>
+  </div>
+
+  <!-- DAILY LOSS GAUGE -->
+  <div class="loss-gauge">
+    <div class="loss-gauge-label">
+      <span>Daily Loss</span>
+      <span id="lossText">0% / 20%</span>
+    </div>
+    <div class="loss-gauge-bar">
+      <div id="lossFill" class="loss-gauge-fill" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-grid">
+
+    <!-- TRADE FEED -->
+    <div class="section-card">
+      <div class="section-header">Trade Feed</div>
+      <table class="trade-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Event</th>
+            <th>Side</th>
+            <th>Entry</th>
+            <th>Edge</th>
+            <th>Stake</th>
+            <th>Status</th>
+            <th>P&L</th>
+          </tr>
+        </thead>
+        <tbody id="tradeBody">
+          <tr><td colspan="8" class="empty-state">No trades yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div>
+      <div class="sidebar-card">
+        <div class="section-header" style="padding: 0 0 12px 0; border: none;">Stats</div>
+        <div class="stat-row">
+          <span class="stat-label">Best Trade</span>
+          <span id="statBest" class="stat-value positive">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Worst Trade</span>
+          <span id="statWorst" class="stat-value negative">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Avg Edge</span>
+          <span id="statAvgEdge" class="stat-value neutral">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Avg CLV</span>
+          <span id="statAvgClv" class="stat-value neutral">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Total Volume</span>
+          <span id="statVolume" class="stat-value neutral">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Fill Rate</span>
+          <span id="statFillRate" class="stat-value neutral">--</span>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="section-header" style="padding: 0 0 12px 0; border: none;">Config</div>
+        <div class="stat-row">
+          <span class="stat-label">Min Edge</span>
+          <span id="cfgEdge" class="stat-value">10%</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Kelly</span>
+          <span id="cfgKelly" class="stat-value">25%</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Max Pos</span>
+          <span id="cfgMaxPos" class="stat-value">10</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Loss Limit</span>
+          <span id="cfgLossLimit" class="stat-value">20%</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API_BASE = '';  // same origin
+
+async function refresh() {
+  try {
+    const [statusRes, tradesRes] = await Promise.all([
+      fetch(API_BASE + '/api/status'),
+      fetch(API_BASE + '/api/trades?limit=50'),
+    ]);
+
+    if (!statusRes.ok || !tradesRes.ok) throw new Error('API error');
+
+    const status = await statusRes.json();
+    const tradesData = await tradesRes.json();
+
+    renderStatus(status);
+    renderTrades(tradesData.trades || []);
+    renderStats(tradesData);
+    document.getElementById('offlineBanner').classList.remove('visible');
+  } catch (e) {
+    document.getElementById('offlineBanner').classList.add('visible');
+    document.getElementById('statusPill').className = 'status-pill offline';
+    document.getElementById('statusPill').textContent = 'OFFLINE';
+  }
+
+  document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+}
+
+function renderStatus(s) {
+  // Status pill
+  const pill = document.getElementById('statusPill');
+  if (s.kill_switch_active) {
+    pill.className = 'status-pill stopped'; pill.textContent = 'STOPPED';
+  } else if (!s.running) {
+    pill.className = 'status-pill offline'; pill.textContent = 'OFFLINE';
+  } else if (s.demo_mode) {
+    pill.className = 'status-pill demo'; pill.textContent = 'DEMO';
+  } else {
+    pill.className = 'status-pill live'; pill.textContent = 'LIVE';
+  }
+
+  // KPIs
+  const pnlEl = document.getElementById('kpiPnl');
+  pnlEl.textContent = '$' + (s.session_pnl >= 0 ? '+' : '') + s.session_pnl.toFixed(2);
+  pnlEl.className = 'kpi-value ' + (s.session_pnl >= 0 ? 'positive' : 'negative');
+
+  document.getElementById('kpiBankroll').textContent =
+    'bankroll: ' + (s.bankroll != null ? '$' + s.bankroll.toFixed(0) : '--');
+
+  const wrEl = document.getElementById('kpiWinRate');
+  wrEl.textContent = s.win_rate != null ? s.win_rate.toFixed(1) + '%' : '--%';
+
+  document.getElementById('kpiClv').textContent =
+    'CLV: ' + (s.average_clv != null ? s.average_clv.toFixed(2) + '%' : '--');
+
+  document.getElementById('kpiTrades').textContent = s.trades_placed || 0;
+  document.getElementById('kpiSkipped').textContent = 'skipped: ' + (s.trades_skipped || 0);
+
+  document.getElementById('kpiOpen').textContent = s.open_positions || 0;
+
+  const uptime = s.uptime_seconds || 0;
+  const mins = Math.floor(uptime / 60);
+  const hrs = Math.floor(mins / 60);
+  document.getElementById('kpiUptime').textContent =
+    'uptime: ' + (hrs > 0 ? hrs + 'h ' + (mins % 60) + 'm' : mins + 'm');
+
+  // Daily loss gauge
+  const lossPct = s.daily_loss_pct || 0;
+  const maxPct = 20; // from config
+  const fillPct = Math.min((lossPct / maxPct) * 100, 100);
+  const fill = document.getElementById('lossFill');
+  fill.style.width = fillPct + '%';
+  fill.className = 'loss-gauge-fill' +
+    (fillPct >= 85 ? ' danger' : fillPct >= 60 ? ' warn' : '');
+  document.getElementById('lossText').textContent =
+    lossPct.toFixed(1) + '% / ' + maxPct + '%';
+}
+
+function renderTrades(trades) {
+  const tbody = document.getElementById('tradeBody');
+
+  if (!trades.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No trades yet</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = trades.map(t => {
+    const time = new Date(t.entry_time * 1000).toLocaleTimeString();
+    const event = (t.event_name || '').replace('DEMO ', '');
+    const edge = ((t.edge_at_entry || 0) * 100).toFixed(1) + '%';
+    const stake = '$' + (t.size_usdc || 0).toFixed(2);
+    const entry = (t.entry_price || 0).toFixed(2);
+
+    let statusClass = t.status || 'open';
+    if (t.outcome === 'won') statusClass = 'won';
+    if (t.outcome === 'lost') statusClass = 'lost';
+    const statusText = t.outcome || t.status || 'open';
+
+    const pnl = t.pnl != null
+      ? '<span class="' + (t.pnl >= 0 ? 'positive' : 'negative') + '">$' + (t.pnl >= 0 ? '+' : '') + t.pnl.toFixed(2) + '</span>'
+      : '<span class="neutral">--</span>';
+
+    return '<tr>' +
+      '<td>' + time + '</td>' +
+      '<td>' + event + '</td>' +
+      '<td>' + t.side + '</td>' +
+      '<td>' + entry + '</td>' +
+      '<td>' + edge + '</td>' +
+      '<td>' + stake + '</td>' +
+      '<td><span class="pill ' + statusClass + '">' + statusText + '</span></td>' +
+      '<td>' + pnl + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function renderStats(data) {
+  const trades = data.trades || [];
+  const resolved = trades.filter(t => t.pnl != null);
+
+  if (resolved.length) {
+    const pnls = resolved.map(t => t.pnl);
+    const best = Math.max(...pnls);
+    const worst = Math.min(...pnls);
+    document.getElementById('statBest').textContent = '$' + (best >= 0 ? '+' : '') + best.toFixed(2);
+    document.getElementById('statWorst').textContent = '$' + (worst >= 0 ? '+' : '') + worst.toFixed(2);
+  }
+
+  const edges = trades.filter(t => t.edge_at_entry).map(t => t.edge_at_entry);
+  if (edges.length) {
+    const avg = edges.reduce((a, b) => a + b, 0) / edges.length;
+    document.getElementById('statAvgEdge').textContent = (avg * 100).toFixed(1) + '%';
+  }
+
+  document.getElementById('statVolume').textContent =
+    '$' + (data.total_volume || 0).toFixed(0);
+}
+
+// Auto-refresh every 3 seconds
+setInterval(refresh, 3000);
+refresh();
+</script>
+
+</body>
+</html>

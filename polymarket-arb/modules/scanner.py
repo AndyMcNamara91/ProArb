@@ -35,6 +35,7 @@ ODDS_API_KEY = os.getenv("ODDS_API_KEY", "")
 ODDS_API_BASE = "https://api.the-odds-api.com/v4"
 POLY_GAMMA_BASE = "https://gamma-api.polymarket.com"
 POLY_CLOB_WS = "wss://ws-subscriptions-clob.polymarket.com/ws/market"
+POLY_CLOB_REST = "https://clob.polymarket.com"
 
 # Sports to monitor -- must match The Odds API sport keys
 ACTIVE_SPORTS = os.getenv(
@@ -137,6 +138,17 @@ class ScannerModule:
 
         await self._refresh_poly_markets()
 
+        # Auto-start WebSocket streaming for all known token IDs
+        if self._ws_task is None and self._poly_market_cache:
+            token_ids = []
+            for market in self._poly_market_cache.values():
+                for token in market.get("tokens", []):
+                    tid = token.get("token_id", "")
+                    if tid:
+                        token_ids.append(tid)
+            if token_ids:
+                await self.start_ws_stream(token_ids)
+
         for sport in ACTIVE_SPORTS:
             sport = sport.strip()
             if not sport:
@@ -187,6 +199,19 @@ class ScannerModule:
         for event in events:
             opp = self._process_event(event, sport)
             if opp:
+                # Enrich with order book data for real markets
+                if not opp.token_id.startswith("demo-"):
+                    book = await self.fetch_order_book(opp.token_id)
+                    opp.best_bid = book["best_bid"]
+                    opp.best_ask = book["best_ask"]
+                    opp.bid_ask_spread = book["spread"]
+                    opp.order_book_depth = book["depth_at_mid"]
+                    opp.polymarket_liquidity = book["total_bid_depth"] + book["total_ask_depth"]
+
+                    # Update price from live book if available
+                    if opp.our_side == "YES" and book["best_ask"] > 0:
+                        opp.polymarket_price = book["best_ask"]
+                        opp.edge = opp.pinnacle_fair_prob - opp.polymarket_price
                 opportunities.append(opp)
         return opportunities
 
@@ -373,6 +398,72 @@ class ScannerModule:
     def _normalise_name(name: str) -> str:
         return name.lower().strip()
 
+    # -- Order book depth (Polymarket CLOB REST) -------------------------
+
+    async def fetch_order_book(self, token_id: str) -> dict:
+        """Fetch order book for a token from Polymarket CLOB REST API.
+
+        Returns dict with keys: best_bid, best_ask, spread, depth_at_mid,
+        total_bid_depth, total_ask_depth.
+        """
+        if token_id.startswith("demo-"):
+            return {"best_bid": 0.0, "best_ask": 0.0, "spread": 0.0,
+                    "depth_at_mid": 0.0, "total_bid_depth": 0.0, "total_ask_depth": 0.0}
+
+        client = await self._get_client()
+        try:
+            resp = await client.get(
+                f"{POLY_CLOB_REST}/book",
+                params={"token_id": token_id},
+            )
+            resp.raise_for_status()
+            book = resp.json()
+
+            bids = book.get("bids", [])
+            asks = book.get("asks", [])
+
+            best_bid = float(bids[0]["price"]) if bids else 0.0
+            best_ask = float(asks[0]["price"]) if asks else 0.0
+            spread = best_ask - best_bid if best_bid > 0 and best_ask > 0 else 0.0
+
+            # Calculate depth: total size available on each side
+            total_bid_depth = sum(float(b.get("size", 0)) * float(b.get("price", 0)) for b in bids)
+            total_ask_depth = sum(float(a.get("size", 0)) * float(a.get("price", 0)) for a in asks)
+
+            # Depth at mid: how much liquidity within 2 cents of best bid/ask
+            mid = (best_bid + best_ask) / 2 if spread > 0 else 0.0
+            depth_near_mid = (
+                sum(float(b.get("size", 0)) * float(b.get("price", 0))
+                    for b in bids if float(b.get("price", 0)) >= mid - 0.02)
+                + sum(float(a.get("size", 0)) * float(a.get("price", 0))
+                      for a in asks if float(a.get("price", 0)) <= mid + 0.02)
+            )
+
+            result = {
+                "best_bid": best_bid,
+                "best_ask": best_ask,
+                "spread": round(spread, 4),
+                "depth_at_mid": round(depth_near_mid, 2),
+                "total_bid_depth": round(total_bid_depth, 2),
+                "total_ask_depth": round(total_ask_depth, 2),
+            }
+
+            # Cache in ws_prices for consistency
+            self._ws_prices[token_id] = {
+                "price": (best_bid + best_ask) / 2 if spread > 0 else best_bid or best_ask,
+                "best_bid": best_bid,
+                "best_ask": best_ask,
+                "spread": spread,
+                "depth": depth_near_mid,
+            }
+
+            return result
+
+        except Exception as e:
+            log.debug(f"Order book fetch failed for {token_id}: {e}")
+            return {"best_bid": 0.0, "best_ask": 0.0, "spread": 0.0,
+                    "depth_at_mid": 0.0, "total_bid_depth": 0.0, "total_ask_depth": 0.0}
+
     # -- WebSocket price streaming (Polymarket CLOB) ---------------------
 
     async def start_ws_stream(self, token_ids: list[str]) -> None:
@@ -415,24 +506,50 @@ class ScannerModule:
                 await asyncio.sleep(5)
 
     def _handle_ws_message(self, data: dict) -> None:
-        """Process incoming WebSocket price update."""
+        """Process incoming WebSocket price/book update."""
+        # Handle different message types from Polymarket WS
+        msg_type = data.get("type", "")
+
+        if msg_type == "book":
+            # Full book snapshot
+            token_id = data.get("asset_id") or data.get("market")
+            if not token_id:
+                return
+            bids = data.get("bids", [])
+            asks = data.get("asks", [])
+            entry = self._ws_prices.setdefault(token_id, {})
+            if bids:
+                entry["best_bid"] = float(bids[0].get("price", 0))
+            if asks:
+                entry["best_ask"] = float(asks[0].get("price", 0))
+            if "best_bid" in entry and "best_ask" in entry:
+                entry["spread"] = entry["best_ask"] - entry["best_bid"]
+                entry["price"] = (entry["best_bid"] + entry["best_ask"]) / 2
+            # Calculate depth
+            entry["depth"] = (
+                sum(float(b.get("size", 0)) * float(b.get("price", 0)) for b in bids[:10])
+                + sum(float(a.get("size", 0)) * float(a.get("price", 0)) for a in asks[:10])
+            )
+            return
+
+        # Handle price tick updates
         token_id = data.get("asset_id") or data.get("market")
         if not token_id:
             return
 
+        entry = self._ws_prices.setdefault(token_id, {})
         price = data.get("price")
         best_bid = data.get("best_bid")
         best_ask = data.get("best_ask")
 
         if price is not None:
-            entry = self._ws_prices.setdefault(token_id, {})
             entry["price"] = float(price)
-            if best_bid is not None:
-                entry["best_bid"] = float(best_bid)
-            if best_ask is not None:
-                entry["best_ask"] = float(best_ask)
-            if best_bid is not None and best_ask is not None:
-                entry["spread"] = float(best_ask) - float(best_bid)
+        if best_bid is not None:
+            entry["best_bid"] = float(best_bid)
+        if best_ask is not None:
+            entry["best_ask"] = float(best_ask)
+        if "best_bid" in entry and "best_ask" in entry:
+            entry["spread"] = entry["best_ask"] - entry["best_bid"]
 
     # -- Demo mode -------------------------------------------------------
 

@@ -16,6 +16,7 @@ from typing import Optional
 
 import httpx
 
+from core.devig import devig_power
 from core.models import TradeRecord
 from core.state import BotState
 
@@ -86,10 +87,15 @@ TEAM_NICKNAMES: dict[str, list[str]] = {
 }
 
 
+ODDS_API_KEY = os.getenv("ODDS_API_KEY", "")
+ODDS_API_BASE = "https://api.the-odds-api.com/v4"
+
+
 class ResolverModule:
     def __init__(self, state: BotState):
         self.state = state
         self._http_client: Optional[httpx.AsyncClient] = None
+        self._closing_lines_captured: set[str] = set()  # trade_ids already captured
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._http_client is None or self._http_client.is_closed:
@@ -101,7 +107,11 @@ class ResolverModule:
             await self._http_client.aclose()
 
     async def check_outcomes(self) -> None:
-        """Poll ESPN for finished games and resolve matching trades."""
+        """Poll ESPN for finished games and resolve matching trades.
+
+        Also captures closing Pinnacle lines for CLV tracking on
+        games that are currently in progress.
+        """
         open_trades = self.state.open_trades
         if not open_trades:
             return
@@ -117,20 +127,115 @@ class ResolverModule:
             try:
                 games = await self._fetch_espn_scoreboard(espn_path)
                 for game in games:
-                    if not self._is_game_finished(game):
-                        continue
-
-                    winner = self._determine_winner(game)
-                    if not winner:
-                        continue
-
-                    # Match finished games to open trades
                     matching_trades = self._match_trades_to_game(game, open_trades)
-                    for trade in matching_trades:
-                        self._resolve_trade(trade, winner)
+                    if not matching_trades:
+                        continue
+
+                    # Capture closing lines for games that just started (in progress)
+                    if self._is_game_in_progress(game):
+                        await self._capture_closing_lines(sport, matching_trades)
+
+                    # Resolve finished games
+                    if self._is_game_finished(game):
+                        winner = self._determine_winner(game)
+                        if not winner:
+                            continue
+                        for trade in matching_trades:
+                            self._resolve_trade(trade, winner)
 
             except Exception as e:
                 log.error(f"ESPN resolution error for {sport}: {e}")
+
+    # -- Closing line capture (CLV tracking) -----------------------------
+
+    async def _capture_closing_lines(self, sport: str, trades: list[TradeRecord]) -> None:
+        """Fetch current Pinnacle odds and store as closing line for CLV.
+
+        Called when ESPN shows a game is in progress. We capture the
+        Pinnacle line at game start (or close to it) to measure CLV.
+        """
+        if not ODDS_API_KEY:
+            return
+
+        # Skip trades we've already captured closing lines for
+        uncaptured = [t for t in trades if t.trade_id not in self._closing_lines_captured
+                      and t.pinnacle_prob_at_close is None]
+        if not uncaptured:
+            return
+
+        client = await self._get_client()
+        try:
+            resp = await client.get(
+                f"{ODDS_API_BASE}/sports/{sport}/odds",
+                params={
+                    "apiKey": ODDS_API_KEY,
+                    "regions": "eu",
+                    "bookmakers": "pinnacle",
+                    "markets": "h2h",
+                    "oddsFormat": "decimal",
+                },
+            )
+            resp.raise_for_status()
+            events = resp.json()
+        except Exception as e:
+            log.warning(f"Failed to fetch closing lines for {sport}: {e}")
+            return
+
+        for trade in uncaptured:
+            for event in events:
+                home = event.get("home_team", "").lower()
+                away = event.get("away_team", "").lower()
+
+                # Match event to trade
+                trade_event = trade.event_name.lower()
+                if not (_whole_word_in(home, trade_event) or _whole_word_in(away, trade_event)):
+                    continue
+
+                # Extract Pinnacle odds
+                home_odds, away_odds = self._extract_pinnacle_odds(event)
+                if home_odds is None:
+                    continue
+
+                # De-vig to get fair closing probability
+                home_fair, away_fair = devig_power(home_odds, away_odds)
+
+                # Set closing line based on which side we bet
+                if trade.side == "YES":
+                    trade.pinnacle_prob_at_close = home_fair
+                else:
+                    trade.pinnacle_prob_at_close = away_fair
+
+                self._closing_lines_captured.add(trade.trade_id)
+                clv = trade.clv
+                log.info(
+                    f"CLV captured {trade.event_name} | "
+                    f"close={trade.pinnacle_prob_at_close:.3f} "
+                    f"entry={trade.entry_price:.3f} "
+                    f"CLV={clv * 100:+.1f}%" if clv is not None else ""
+                )
+                break
+
+    @staticmethod
+    def _extract_pinnacle_odds(event: dict) -> tuple[Optional[float], Optional[float]]:
+        """Extract Pinnacle home/away decimal odds from an Odds API event."""
+        home = event.get("home_team", "")
+        away = event.get("away_team", "")
+        home_odds = None
+        away_odds = None
+
+        for bk in event.get("bookmakers", []):
+            if bk.get("key") != "pinnacle":
+                continue
+            for mkt in bk.get("markets", []):
+                if mkt.get("key") != "h2h":
+                    continue
+                for outcome in mkt.get("outcomes", []):
+                    if outcome.get("name") == home:
+                        home_odds = outcome.get("price")
+                    elif outcome.get("name") == away:
+                        away_odds = outcome.get("price")
+
+        return home_odds, away_odds
 
     async def _fetch_espn_scoreboard(self, espn_path: str) -> list[dict]:
         """Fetch today's scoreboard from ESPN."""
@@ -143,6 +248,12 @@ class ResolverModule:
         except Exception as e:
             log.warning(f"ESPN fetch error ({espn_path}): {e}")
             return []
+
+    def _is_game_in_progress(self, game: dict) -> bool:
+        """Check if an ESPN game event is currently in progress."""
+        status = game.get("status", {})
+        state = status.get("type", {}).get("state", "")
+        return state == "in"
 
     def _is_game_finished(self, game: dict) -> bool:
         """Check if an ESPN game event is finished."""
