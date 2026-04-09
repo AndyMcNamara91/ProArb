@@ -7,7 +7,12 @@
     "finish_time": "01:09:48",
     "overall_position": "15",
     "age_group": "30-34",
-    "score": "785.21"
+    "score": "785.21",
+    "swim": "",
+    "t1": "",
+    "cycle": "",
+    "t2": "",
+    "run": ""
   },
   {
     "athlete_name": "Matthew Carroll",
@@ -17,7 +22,12 @@
     "finish_time": "01:10:09",
     "overall_position": "21",
     "age_group": "30-34",
-    "score": "761.06"
+    "score": "761.06",
+    "swim": "",
+    "t1": "",
+    "cycle": "",
+    "t2": "",
+    "run": ""
   },
   {
     "athlete_name": "Matthew Carroll",
@@ -27,7 +37,12 @@
     "finish_time": "01:17:51",
     "overall_position": "36",
     "age_group": "30-34",
-    "score": "745.02"
+    "score": "745.02",
+    "swim": "",
+    "t1": "",
+    "cycle": "",
+    "t2": "",
+    "run": ""
   },
   {
     "athlete_name": "Matthew Carroll",
@@ -37,7 +52,12 @@
     "finish_time": "01:16:28",
     "overall_position": "32",
     "age_group": "30-34",
-    "score": "726.90"
+    "score": "726.90",
+    "swim": "00:17:34",
+    "t1": "00:01:19",
+    "cycle": "00:36:21",
+    "t2": "00:00:52",
+    "run": "00:20:20"
   },
   {
     "athlete_name": "Matthew Carroll",
@@ -47,7 +67,12 @@
     "finish_time": "02:19:20",
     "overall_position": "56",
     "age_group": "30-34",
-    "score": "755.02"
+    "score": "755.02",
+    "swim": "",
+    "t1": "",
+    "cycle": "",
+    "t2": "",
+    "run": ""
   },
   {
     "athlete_name": "Darragh Ryan",
@@ -57,7 +82,12 @@
     "finish_time": "01:15:12",
     "overall_position": "43",
     "age_group": "35-39",
-    "score": "659.27"
+    "score": "659.27",
+    "swim": "",
+    "t1": "",
+    "cycle": "",
+    "t2": "",
+    "run": ""
   },
   {
     "athlete_name": "Andy Mc Namara",
@@ -67,7 +97,12 @@
     "finish_time": "01:18:09",
     "overall_position": "18",
     "age_group": "30-34",
-    "score": "633.40"
+    "score": "633.40",
+    "swim": "00:15:54",
+    "t1": "00:01:29",
+    "cycle": "00:34:12",
+    "t2": "00:01:55",
+    "run": "00:24:39"
   },
   {
     "athlete_name": "Ross Murphy",
@@ -77,7 +112,12 @@
     "finish_time": "01:25:37",
     "overall_position": "28",
     "age_group": "35-39",
-    "score": "660.55"
+    "score": "660.55",
+    "swim": "",
+    "t1": "",
+    "cycle": "",
+    "t2": "",
+    "run": ""
   },
   {
     "athlete_name": "Ciarán Reynolds",
@@ -87,7 +127,12 @@
     "finish_time": "01:14:19",
     "overall_position": "2",
     "age_group": "35-39",
-    "score": "760.99"
+    "score": "760.99",
+    "swim": "",
+    "t1": "",
+    "cycle": "",
+    "t2": "",
+    "run": ""
   },
   {
     "athlete_name": "Ciarán Reynolds",
@@ -97,7 +142,12 @@
     "finish_time": "01:26:17",
     "overall_position": "74",
     "age_group": "30-34",
-    "score": "672.20"
+    "score": "672.20",
+    "swim": "",
+    "t1": "",
+    "cycle": "",
+    "t2": "",
+    "run": ""
   },
   {
     "athlete_name": "Ciarán Reynolds",
@@ -107,7 +157,12 @@
     "finish_time": "02:39:30",
     "overall_position": "192",
     "age_group": "30-34",
-    "score": "659.56"
+    "score": "659.56",
+    "swim": "",
+    "t1": "",
+    "cycle": "",
+    "t2": "",
+    "run": ""
   },
   {
     "athlete_name": "Arron Murphy",
@@ -117,7 +172,12 @@
     "finish_time": "03:05:24",
     "overall_position": "261",
     "age_group": "35-39",
-    "score": "563.62"
+    "score": "563.62",
+    "swim": "",
+    "t1": "",
+    "cycle": "",
+    "t2": "",
+    "run": ""
   },
   {
     "athlete_name": "Arron Murphy",
@@ -127,7 +187,12 @@
     "finish_time": "01:37:44",
     "overall_position": "163",
     "age_group": "30-34",
-    "score": "571.11"
+    "score": "571.11",
+    "swim": "",
+    "t1": "",
+    "cycle": "",
+    "t2": "",
+    "run": ""
   },
   {
     "athlete_name": "Arron Murphy",
@@ -137,7 +202,12 @@
     "finish_time": "03:06:13",
     "overall_position": "172",
     "age_group": "30-34",
-    "score": "554.82"
+    "score": "554.82",
+    "swim": "",
+    "t1": "",
+    "cycle": "",
+    "t2": "",
+    "run": ""
   },
   {
     "athlete_name": "Philip Sheridan",
@@ -147,7 +217,12 @@
     "finish_time": "02:23:09",
     "overall_position": "14",
     "age_group": "35-39",
-    "score": "755.65"
+    "score": "755.65",
+    "swim": "00:25:31",
+    "t1": "00:03:28",
+    "cycle": "01:10:44",
+    "t2": "00:00:27",
+    "run": "00:42:56"
   },
   {
     "athlete_name": "Philip Sheridan",
@@ -157,7 +232,12 @@
     "finish_time": "01:12:04",
     "overall_position": "51",
     "age_group": "35-39",
-    "score": "750.69"
+    "score": "750.69",
+    "swim": "00:12:43",
+    "t1": "00:02:00",
+    "cycle": "00:37:02",
+    "t2": "00:01:26",
+    "run": "00:18:51"
   },
   {
     "athlete_name": "Declan Morley",
@@ -167,7 +247,12 @@
     "finish_time": "02:38:51",
     "overall_position": "150",
     "age_group": "30-34",
-    "score": "669.74"
+    "score": "669.74",
+    "swim": "00:33:47",
+    "t1": "00:04:36",
+    "cycle": "01:11:21",
+    "t2": "00:02:59",
+    "run": "00:46:05"
   },
   {
     "athlete_name": "Daniel Eckersall",
@@ -177,7 +262,12 @@
     "finish_time": "01:19:04",
     "overall_position": "14",
     "age_group": "35-39",
-    "score": "715.27"
+    "score": "715.27",
+    "swim": "",
+    "t1": "",
+    "cycle": "",
+    "t2": "",
+    "run": ""
   },
   {
     "athlete_name": "Brian Smyth",
@@ -187,6 +277,11 @@
     "finish_time": "01:39:53",
     "overall_position": "82",
     "age_group": "35-39",
-    "score": "566.20"
+    "score": "566.20",
+    "swim": "",
+    "t1": "",
+    "cycle": "",
+    "t2": "",
+    "run": ""
   }
 ]
