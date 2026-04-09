@@ -1,0 +1,302 @@
+[
+  {
+    "athlete_name": "Matthew Carroll",
+    "race_name": "Pulse Port Beach - Triathlon National Series",
+    "race_date": "20th Sep 2025",
+    "distance": "Sprint",
+    "finish_time": "01:09:48",
+    "overall_position": "15",
+    "ag_position": "30-34",
+    "score": "785.21"
+  },
+  {
+    "athlete_name": "Matthew Carroll",
+    "race_name": "Loughrea Triathlon - Triathlon National Series",
+    "race_date": "3rd Aug 2025",
+    "distance": "Sprint",
+    "finish_time": "01:10:09",
+    "overall_position": "21",
+    "ag_position": "30-34",
+    "score": "761.06"
+  },
+  {
+    "athlete_name": "Matthew Carroll",
+    "race_name": "Dublin City Sprint Triathlon - Triathlon National Series",
+    "race_date": "24th Aug 2024",
+    "distance": "Sprint",
+    "finish_time": "01:17:51",
+    "overall_position": "36",
+    "ag_position": "30-34",
+    "score": "745.02"
+  },
+  {
+    "athlete_name": "Matthew Carroll",
+    "race_name": "Skerries Triathlon - Triathlon National Series",
+    "race_date": "18th Aug 2024",
+    "distance": "Sprint",
+    "finish_time": "01:16:28",
+    "overall_position": "32",
+    "ag_position": "30-34",
+    "score": "726.9"
+  },
+  {
+    "athlete_name": "Matthew Carroll",
+    "race_name": "TriAthy Standard Triathlon - Triathlon National Series",
+    "race_date": "1st Jun 2024",
+    "distance": "Standard",
+    "finish_time": "02:19:20",
+    "overall_position": "56",
+    "ag_position": "30-34",
+    "score": "755.02"
+  },
+  {
+    "athlete_name": "Darragh Ryan",
+    "race_name": "Dungarvan Duathlon",
+    "race_date": "6th Sep 2025",
+    "distance": "Sprint",
+    "finish_time": "01:28:17",
+    "overall_position": "36",
+    "ag_position": "35-39",
+    "score": "685.76"
+  },
+  {
+    "athlete_name": "Darragh Ryan",
+    "race_name": "Carrick-on-Suir Sprint Triathlon",
+    "race_date": "27th Jul 2025",
+    "distance": "Sprint",
+    "finish_time": "01:15:12",
+    "overall_position": "43",
+    "ag_position": "35-39",
+    "score": "659.27"
+  },
+  {
+    "athlete_name": "Andy Mc Namara",
+    "race_name": "Lough Ree Monster Triathlon",
+    "race_date": "6th Sep 2025",
+    "distance": "Sprint",
+    "finish_time": "01:18:09",
+    "overall_position": "18",
+    "ag_position": "30-34",
+    "score": "633.4"
+  },
+  {
+    "athlete_name": "Andy Mc Namara",
+    "race_name": "Galco Naas Duathlon Race 1  - Duathlon National Series",
+    "race_date": "25th Feb 2024",
+    "distance": "Sprint",
+    "finish_time": "01:17:06",
+    "overall_position": "80",
+    "ag_position": "30-34",
+    "score": "626.89"
+  },
+  {
+    "athlete_name": "Andy Mc Namara",
+    "race_name": "Limerick Duathlon - Duathlon National Series",
+    "race_date": "18th Feb 2024",
+    "distance": "Sprint",
+    "finish_time": "01:24:22",
+    "overall_position": "73",
+    "ag_position": "30-34",
+    "score": "626.23"
+  },
+  {
+    "athlete_name": "Ross Murphy",
+    "race_name": "TriLaois",
+    "race_date": "12th Apr 2025",
+    "distance": "Sprint",
+    "finish_time": "01:25:37",
+    "overall_position": "28",
+    "ag_position": "35-39",
+    "score": "660.55"
+  },
+  {
+    "athlete_name": "Ross Murphy",
+    "race_name": "Carlow Duathlon - Duathlon National Series",
+    "race_date": "23rd Mar 2025",
+    "distance": "Sprint",
+    "finish_time": "01:17:16",
+    "overall_position": "44",
+    "ag_position": "35-39",
+    "score": "683.24"
+  },
+  {
+    "athlete_name": "Ross Murphy",
+    "race_name": "Galco Naas Duathlon - Duathlon National Series",
+    "race_date": "9th Mar 2025",
+    "distance": "Sprint",
+    "finish_time": "01:08:27",
+    "overall_position": "37",
+    "ag_position": "35-39",
+    "score": "687.38"
+  },
+  {
+    "athlete_name": "Ross Murphy",
+    "race_name": "Limerick Irish Sprint Duathlon National Championships",
+    "race_date": "2nd Mar 2025",
+    "distance": "Sprint",
+    "finish_time": "01:10:47",
+    "overall_position": "108",
+    "ag_position": "35-39",
+    "score": "669.91"
+  },
+  {
+    "athlete_name": "Ciarán Reynolds",
+    "race_name": "TriLaois",
+    "race_date": "12th Apr 2025",
+    "distance": "Sprint",
+    "finish_time": "01:14:19",
+    "overall_position": "2",
+    "ag_position": "35-39",
+    "score": "760.99"
+  },
+  {
+    "athlete_name": "Ciarán Reynolds",
+    "race_name": "Limerick Irish Sprint Duathlon National Championships",
+    "race_date": "2nd Mar 2025",
+    "distance": "Sprint",
+    "finish_time": "01:01:37",
+    "overall_position": "48",
+    "ag_position": "35-39",
+    "score": "769.58"
+  },
+  {
+    "athlete_name": "Ciarán Reynolds",
+    "race_name": "Dublin City Sprint Triathlon - Triathlon National Series",
+    "race_date": "24th Aug 2024",
+    "distance": "Sprint",
+    "finish_time": "01:26:17",
+    "overall_position": "74",
+    "ag_position": "30-34",
+    "score": "672.2"
+  },
+  {
+    "athlete_name": "Ciarán Reynolds",
+    "race_name": "TriAthy Standard Triathlon - Triathlon National Series",
+    "race_date": "1st Jun 2024",
+    "distance": "Standard",
+    "finish_time": "02:39:30",
+    "overall_position": "192",
+    "ag_position": "30-34",
+    "score": "659.56"
+  },
+  {
+    "athlete_name": "Ciarán Reynolds",
+    "race_name": "Galco Naas Duathlon Race 1  - Duathlon National Series",
+    "race_date": "25th Feb 2024",
+    "distance": "Sprint",
+    "finish_time": "01:00:55",
+    "overall_position": "20",
+    "ag_position": "30-34",
+    "score": "793.43"
+  },
+  {
+    "athlete_name": "Ciarán Reynolds",
+    "race_name": "Limerick Duathlon - Duathlon National Series",
+    "race_date": "18th Feb 2024",
+    "distance": "Sprint",
+    "finish_time": "01:08:16",
+    "overall_position": "16",
+    "ag_position": "30-34",
+    "score": "773.93"
+  },
+  {
+    "athlete_name": "Arron Murphy",
+    "race_name": "Harbourman Triathlon - Triathlon National Series",
+    "race_date": "6th Jul 2025",
+    "distance": "Standard",
+    "finish_time": "03:05:24",
+    "overall_position": "261",
+    "ag_position": "35-39",
+    "score": "563.62"
+  },
+  {
+    "athlete_name": "Arron Murphy",
+    "race_name": "Pulse Port Beach - Irish National Series",
+    "race_date": "28th Sep 2024",
+    "distance": "Sprint",
+    "finish_time": "01:37:44",
+    "overall_position": "163",
+    "ag_position": "30-34",
+    "score": "571.11"
+  },
+  {
+    "athlete_name": "Arron Murphy",
+    "race_name": "Pikeman Irish National Standard Distance Triathlon Championships",
+    "race_date": "15th Sep 2024",
+    "distance": "Standard",
+    "finish_time": "03:06:13",
+    "overall_position": "172",
+    "ag_position": "30-34",
+    "score": "554.82"
+  },
+  {
+    "athlete_name": "Philip Sheridan",
+    "race_name": "Dublin City Standard Triathlon - Triathlon National Series",
+    "race_date": "23rd Aug 2025",
+    "distance": "Standard",
+    "finish_time": "02:23:09",
+    "overall_position": "14",
+    "ag_position": "35-39",
+    "score": "755.65"
+  },
+  {
+    "athlete_name": "Philip Sheridan",
+    "race_name": "Tri795 Triathlon - Triathlon National Series",
+    "race_date": "26th May 2024",
+    "distance": "Sprint",
+    "finish_time": "01:12:04",
+    "overall_position": "51",
+    "ag_position": "35-39",
+    "score": "750.69"
+  },
+  {
+    "athlete_name": "Philip Sheridan",
+    "race_name": "Pheonix Park Irish National Sprint Duathlon Championships",
+    "race_date": "21st Apr 2024",
+    "distance": "Sprint",
+    "finish_time": "01:06:42",
+    "overall_position": "54",
+    "ag_position": "35-39",
+    "score": "772.63"
+  },
+  {
+    "athlete_name": "Philip Sheridan",
+    "race_name": "Phoenix Park Sprint Duathlon - Duathlon National Series",
+    "race_date": "24th Mar 2024",
+    "distance": "Sprint",
+    "finish_time": "01:11:08",
+    "overall_position": "24",
+    "ag_position": "35-39",
+    "score": "746.02"
+  },
+  {
+    "athlete_name": "Declan Morley",
+    "race_name": "TriAthy Standard Triathlon - Triathlon National Series",
+    "race_date": "31st May 2025",
+    "distance": "Standard",
+    "finish_time": "02:38:51",
+    "overall_position": "150",
+    "ag_position": "30-34",
+    "score": "669.74"
+  },
+  {
+    "athlete_name": "Daniel Eckersall",
+    "race_name": "TriLaois",
+    "race_date": "12th Apr 2025",
+    "distance": "Sprint",
+    "finish_time": "01:19:04",
+    "overall_position": "14",
+    "ag_position": "35-39",
+    "score": "715.27"
+  },
+  {
+    "athlete_name": "Brian Smyth",
+    "race_name": "TriLaois",
+    "race_date": "12th Apr 2025",
+    "distance": "Sprint",
+    "finish_time": "01:39:53",
+    "overall_position": "82",
+    "ag_position": "35-39",
+    "score": "566.2"
+  }
+]
