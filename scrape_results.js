@@ -268,9 +268,11 @@ function timeToSeconds(timeStr) {
       const races = await scrapeAthleteProfile(page, match.athleteId, athlete);
       console.log(`  Total races on profile: ${races.length}`);
 
-      // Filter for 2024 and 2025
-      const filtered = filterByYear(races, [2024, 2025]);
-      console.log(`  Races in 2024-2025: ${filtered.length}`);
+      // Filter for 2024 and 2025, triathlon only (exclude duathlons)
+      const filtered = filterByYear(races, [2024, 2025]).filter(r =>
+        r.discipline === 'Triathlon'
+      );
+      console.log(`  Triathlon races in 2024-2025: ${filtered.length}`);
 
       for (const race of filtered) {
         allResults.push({
